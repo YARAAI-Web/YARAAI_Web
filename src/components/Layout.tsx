@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 interface Props {
   children: ReactNode
@@ -7,42 +7,51 @@ interface Props {
 
 export default function Layout({ children }: Props) {
   const navigate = useNavigate()
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-300">
-      {/* 헤더 */}
-      <header className="flex-shrink-0 w-full bg-gray-300 border-b border-blue-600">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
+      {/* Header */}
+      <header className="w-full bg-gray-300 border-b-2 border-blue-600">
+        <div className="mx-auto max-w-5xl flex items-center justify-between px-8 py-4">
           <h1
-            className="text-3xl font-bold text-black cursor-pointer"
+            className="text-[2rem] font-bold text-black cursor-pointer"
             onClick={() => navigate('/')}
           >
             YARAAI
           </h1>
-          <button
-            onClick={() => navigate('/reports')}
-            className="px-4 py-2 bg-white text-black border border-blue-600 rounded hover:bg-blue-50"
-          >
-            Report
-          </button>
+          <div className="flex items-center space-x-2">
+            <span className="h-[1.5rem] border-l-2 border-blue-600" />
+            <Link
+              to="/reports"
+              className="text-[1rem] text-gray-900 hover:underline"
+            >
+              Report
+            </Link>
+            <span className="h-[1.5rem] border-l-2 border-blue-600" />
+          </div>
         </div>
       </header>
 
-      {/* 본문 */}
-      <main className="flex-1 flex items-center justify-center">
+      {/* Main: 헤더 바로 아래부터 시작 (pt-20 = 80px) */}
+      <main className="flex-1 flex flex-col items-center justify-start pt-20 relative">
         {children}
-      </main>
 
-      {/* 챗봇 버튼 */}
-      <div className="fixed bottom-6 right-6">
+        {/* Chatbot 버튼 (우하단 고정) */}
         <button
           onClick={() => alert('챗봇 기능은 추후 구현 예정입니다')}
-          className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center text-3xl hover:bg-blue-700"
+          style={{
+            position: 'fixed',
+            bottom: '48px',
+            right: '48px',
+            width: '56px',
+            height: '56px',
+            zIndex: 999,
+          }}
+          className="bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-blue-700"
           title="챗봇 열기"
         >
           💬
         </button>
-      </div>
+      </main>
     </div>
   )
 }

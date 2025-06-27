@@ -27,7 +27,6 @@ export default function MainPage() {
     setLoading(true)
     const form = new FormData()
     form.append('file', file)
-
     try {
       const res = await axios.post<{ filename: string }>(
         'http://localhost:8000/upload',
@@ -37,7 +36,7 @@ export default function MainPage() {
       navigate('/analysis', { state: { filename: res.data.filename } })
     } catch (err: any) {
       console.error(err)
-      alert(err.response?.data?.detail ?? '파일 업로드 중 오류가 발생했습니다.')
+      alert(err.response?.data?.detail || '파일 업로드 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
@@ -45,19 +44,25 @@ export default function MainPage() {
 
   return (
     <Layout>
-      <div className="w-full max-w-3xl px-6">
-        {/* 드롭존 */}
+      {/*
+        헤더 바로 아래에서 80px 아래로 떨어뜨리려면
+        pt-20 에서 내려온 자식 컨테이너에 mt-12 (48px) 혹은 mt-16 (64px)을 주시면 되고
+        드롭존–버튼 사이 간격은 space-y-8 (32px)
+      */}
+      <div className="flex flex-col items-center mt-16 space-y-8">
+        {/* Drop zone (640×240px) */}
         <div
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           onClick={() => document.getElementById('fileInput')?.click()}
-          className={`w-full h-64 mt-16 border-2 border-blue-600 bg-white rounded-lg
-                      flex items-center justify-center cursor-pointer`}
+          className="w-[640px] h-[240px] bg-white border-2 border-blue-600 rounded-lg flex items-center justify-center cursor-pointer"
         >
           {file ? (
-            <span className="truncate px-4 text-gray-700">{file.name}</span>
+            <span className="text-black text-[1.5rem] truncate">
+              {file.name}
+            </span>
           ) : (
-            <span className="text-gray-500 text-xl">input the file</span>
+            <span className="text-gray-500 text-[1.5rem]">input the file</span>
           )}
           <input
             id="fileInput"
@@ -68,18 +73,15 @@ export default function MainPage() {
           />
         </div>
 
-        {/* Analysis 버튼 */}
+        {/* Analysis 버튼 (264×50px) */}
         <button
           onClick={handleAnalysis}
           disabled={!file || loading}
-          className={`
-            mt-8 block mx-auto w-48 h-12 text-lg font-medium text-white rounded
-            ${
-              file && !loading
-                ? 'bg-blue-600 hover:bg-blue-700'
-                : 'bg-gray-400 cursor-not-allowed'
-            }
-          `}
+          className={`w-[264px] h-[50px] text-[1.5rem] font-medium rounded-lg ${
+            file && !loading
+              ? 'bg-yaraai-light text-black hover:bg-opacity-90'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
         >
           {loading ? 'Analyzing...' : 'Analysis'}
         </button>

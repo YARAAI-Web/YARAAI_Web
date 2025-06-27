@@ -1,4 +1,4 @@
-// src/App.tsx
+import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import MainPage from './pages/MainPage'
 import AnalysisPage from './pages/AnalysisPage'
