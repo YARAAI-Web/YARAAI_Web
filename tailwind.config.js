@@ -1,7 +1,7 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  safelist: ['fixed', 'bottom-12', 'right-12', 'z-50', 'mt-20', 'space-y-8'],
+  safelist: ['mt-20', 'mb-8', 'w-[640px]', 'h-[240px]'],
   theme: {
     extend: {
       colors: {

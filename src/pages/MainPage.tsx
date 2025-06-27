@@ -1,3 +1,4 @@
+// src/pages/MainPage.tsx
 import React, { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
@@ -10,9 +11,7 @@ export default function MainPage() {
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
-    if (e.dataTransfer.files.length > 0) {
-      setFile(e.dataTransfer.files[0])
-    }
+    if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0])
   }, [])
 
   const handleFileChange = useCallback(
@@ -44,18 +43,14 @@ export default function MainPage() {
 
   return (
     <Layout>
-      {/*
-        헤더 바로 아래에서 80px 아래로 떨어뜨리려면
-        pt-20 에서 내려온 자식 컨테이너에 mt-12 (48px) 혹은 mt-16 (64px)을 주시면 되고
-        드롭존–버튼 사이 간격은 space-y-8 (32px)
-      */}
-      <div className="flex flex-col items-center mt-16 space-y-8">
-        {/* Drop zone (640×240px) */}
+      <div className="flex flex-col items-center mt-20">
+        {/* Drop zone (800×400px) */}
         <div
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           onClick={() => document.getElementById('fileInput')?.click()}
-          className="w-[640px] h-[240px] bg-white border-2 border-blue-600 rounded-lg flex items-center justify-center cursor-pointer"
+          className="w-[800px] h-[400px] bg-white rounded-lg flex items-center justify-center cursor-pointer"
+          style={{ border: '2px solid #A3E635' }} // 연두색 border
         >
           {file ? (
             <span className="text-black text-[1.5rem] truncate">
@@ -73,15 +68,16 @@ export default function MainPage() {
           />
         </div>
 
-        {/* Analysis 버튼 (264×50px) */}
+        {/* Analysis 버튼 (300×75px) */}
         <button
           onClick={handleAnalysis}
           disabled={!file || loading}
-          className={`w-[264px] h-[50px] text-[1.5rem] font-medium rounded-lg ${
-            file && !loading
-              ? 'bg-yaraai-light text-black hover:bg-opacity-90'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
+          style={{
+            marginTop: '50px',
+            backgroundColor: file && !loading ? '#A3E635' : undefined,
+            cursor: !file || loading ? 'not-allowed' : 'pointer',
+          }}
+          className="w-[300px] h-[75px] text-[1.5rem] font-medium rounded-lg"
         >
           {loading ? 'Analyzing...' : 'Analysis'}
         </button>
