@@ -8,12 +8,6 @@ import ida_hexrays
 import ida_pro
 import os
 
-import idaapi
-import idautils
-import ida_hexrays
-import ida_pro
-import os
-
 pe_api_funcs = [  # 생략: 원본 그대로 유지
     # ...
 ]
