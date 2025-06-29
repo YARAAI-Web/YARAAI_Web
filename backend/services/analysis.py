@@ -11,15 +11,7 @@ from .mcp_collector import mcp_run
 from .c_h_run import analyze_file as run_analysis, OUTPUT_DIR
 # (2) PE 헤더 파싱
 from .extract_pe_headers import extract_headers
-# (4) 파일 메타데이터
-from .meta import (
-    get_metadata,
-    get_current_address,
-    get_current_function,
-    get_entry_points,
-    file_entropy,
-    string_stats,
-)
+import psutil
 
 IDA_PATH = r"C:\Program Files\IDA Professional 9.1\ida.exe"
 IDA_SCRIPT = os.path.abspath("ida_mcp_launcher.py")
