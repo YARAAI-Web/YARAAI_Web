@@ -41,12 +41,13 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     time.sleep(10)
 
     mcp = mcp_run()
+    kill_process_using_port(13337)
+    time.sleep(5)
 
     # 3) PE 헤더
     try:    pe_hdr      = extract_headers(file_path)
     except: pe_hdr      = {}
     print("meta 완료")
-
     
     # 1) IDA → .c/.h + VT 결과 생성
     run_analysis(file_path)
@@ -85,6 +86,5 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
         "summary":              summary,
         "yara_rules":           yara_rules,
     }
-    kill_process_using_port(13337)
 
     return report
