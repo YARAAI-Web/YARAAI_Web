@@ -1,0 +1,31 @@
+{
+  "get_metadata": {
+    "path": "D:\\Whitehat\\web\\YARRAI_Web\\backend\\uploads\\e04ca81c-ba7e-4f65-9ebd-9adfa6ff4ea4.exe",
+    "module": "e04ca81c-ba7e-4f65-9ebd-9adfa6ff4ea4.exe",
+    "base": "0x140000000",
+    "size": "0x1d000",
+    "md5": "845e7763ffb4246b3f294b418b0d9b9c",
+    "sha256": "0d4e423cb2ba20b3e48bb4b1a93cce4e7e49cb955b6dae20a06b64363d54fb3c",
+    "crc32": "0x3c54d050",
+    "filesize": "0x19200"
+  },
+  "get_current_address": "0x140003a70",
+  "get_current_function": {
+    "address": "0x140003a70",
+    "name": "WinMain",
+    "size": "0x5"
+  },
+  "get_entry_points": [
+    {
+      "address": "0x140002d50",
+      "name": "start",
+      "size": "0x12"
+    }
+  ],
+  "file_entropy": 6.6386842039241944,
+  "string_stats": {
+    "string_count": 152,
+    "avg_str_len": 0.0,
+    "max_str_len": 0
+  }
+}

@@ -90,8 +90,8 @@ def analyze_file(file_path: str) -> None:
     3) inject_c_and_h_to_json으로 JSON 결과 생성
     """
     print(f"[+] 분석 시작: {file_path}")
-    ida_cmd = f'"{IDA_PATH}" -A -S"{IDA_SCRIPT}" "{file_path}"'
-    subprocess.run(ida_cmd, shell=True, check=True)
+    # ida_cmd = f'"{IDA_PATH}" -A "{file_path}"'
+    # subprocess.run(ida_cmd, shell=True, check=True)
 
     # C/H 파일 생성 대기
     base_no_ext = os.path.splitext(file_path)[0]

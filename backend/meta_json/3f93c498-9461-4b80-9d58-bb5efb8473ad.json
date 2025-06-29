@@ -1,0 +1,65 @@
+{
+  "get_metadata": {},
+  "get_current_address": null,
+  "get_current_function": {},
+  "get_entry_points": [],
+  "file_entropy": null,
+  "string_stats": {},
+  "pe_headers": {
+    "file_name": "3f93c498-9461-4b80-9d58-bb5efb8473ad.exe",
+    "machine": "0x8664",
+    "number_of_sections": 3,
+    "time_date_stamp": "0x68504fd8",
+    "pointer_to_symbol_table": "0x46400",
+    "number_of_symbols": 1525,
+    "size_of_optional_header": 240,
+    "characteristics": "0x26",
+    "entry_point": "0x530f0",
+    "image_base": "0x140000000",
+    "section_alignment": "0x1000",
+    "file_alignment": "0x200",
+    "subsystem": "0x3",
+    "dll_characteristics": "0x160",
+    "sections": [
+      {
+        "name": ".text",
+        "virtual_address": "0x1000",
+        "virtual_size": "0x41000",
+        "raw_size": "0x0",
+        "characteristics": "0xe0000080"
+      },
+      {
+        "name": ".data",
+        "virtual_address": "0x42000",
+        "virtual_size": "0x12000",
+        "raw_size": "0x11400",
+        "characteristics": "0xe0000040"
+      },
+      {
+        "name": ".rsrc",
+        "virtual_address": "0x54000",
+        "virtual_size": "0x1000",
+        "raw_size": "0x200",
+        "characteristics": "0xc0000040"
+      }
+    ]
+  },
+  "mcp_strings": {},
+  "virustotal": {
+    "sha256": "7836163ad039929e6ba9c5ff660b98fc7d07b8e0b0971f31d056270c2f56125e",
+    "type_tag": "peexe",
+    "popular_threat_name": null,
+    "tags": [
+      "upx",
+      "overlay",
+      "corrupt",
+      "peexe",
+      "spreader",
+      "64bits"
+    ]
+  },
+  "c_code": [],
+  "h_code": [],
+  "summary": [],
+  "yara_rules": ""
+}

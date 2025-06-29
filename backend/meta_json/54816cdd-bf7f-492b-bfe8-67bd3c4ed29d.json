@@ -1,0 +1,85 @@
+{
+  "get_metadata": {},
+  "get_current_address": null,
+  "get_current_function": {},
+  "get_entry_points": [],
+  "file_entropy": null,
+  "string_stats": {},
+  "pe_headers": {
+    "file_name": "54816cdd-bf7f-492b-bfe8-67bd3c4ed29d.exe",
+    "machine": "0x8664",
+    "number_of_sections": 6,
+    "time_date_stamp": "0x63f5a7ce",
+    "pointer_to_symbol_table": "0x0",
+    "number_of_symbols": 0,
+    "size_of_optional_header": 240,
+    "characteristics": "0x22",
+    "entry_point": "0x2d50",
+    "image_base": "0x140000000",
+    "section_alignment": "0x1000",
+    "file_alignment": "0x200",
+    "subsystem": "0x2",
+    "dll_characteristics": "0x8160",
+    "sections": [
+      {
+        "name": ".text",
+        "virtual_address": "0x1000",
+        "virtual_size": "0x2d5c",
+        "raw_size": "0x2e00",
+        "characteristics": "0x60000020"
+      },
+      {
+        "name": ".rdata",
+        "virtual_address": "0x4000",
+        "virtual_size": "0x3d84",
+        "raw_size": "0x3e00",
+        "characteristics": "0x40000040"
+      },
+      {
+        "name": ".data",
+        "virtual_address": "0x8000",
+        "virtual_size": "0xb88",
+        "raw_size": "0x400",
+        "characteristics": "0xc0000040"
+      },
+      {
+        "name": ".pdata",
+        "virtual_address": "0x9000",
+        "virtual_size": "0x3f0",
+        "raw_size": "0x400",
+        "characteristics": "0x40000040"
+      },
+      {
+        "name": ".rsrc",
+        "virtual_address": "0xa000",
+        "virtual_size": "0x115b0",
+        "raw_size": "0x11600",
+        "characteristics": "0x40000040"
+      },
+      {
+        "name": ".reloc",
+        "virtual_address": "0x1c000",
+        "virtual_size": "0x398",
+        "raw_size": "0x400",
+        "characteristics": "0x42000040"
+      }
+    ]
+  },
+  "virustotal": {
+    "sha256": "0d4e423cb2ba20b3e48bb4b1a93cce4e7e49cb955b6dae20a06b64363d54fb3c",
+    "type_tag": "peexe",
+    "popular_threat_name": null,
+    "tags": [
+      "peexe",
+      "assembly",
+      "detect-debug-environment",
+      "idle",
+      "checks-user-input",
+      "64bits"
+    ]
+  },
+  "c_code": [],
+  "h_code": [],
+  "summary": [],
+  "yara_rules": ""
+}

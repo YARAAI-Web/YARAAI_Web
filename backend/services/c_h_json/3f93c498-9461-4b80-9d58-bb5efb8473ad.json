@@ -1,0 +1,17 @@
+{
+  "c_code": [],
+  "h_code": [],
+  "virustotal": {
+    "sha256": "7836163ad039929e6ba9c5ff660b98fc7d07b8e0b0971f31d056270c2f56125e",
+    "type_tag": "peexe",
+    "popular_threat_name": null,
+    "tags": [
+      "upx",
+      "overlay",
+      "corrupt",
+      "peexe",
+      "spreader",
+      "64bits"
+    ]
+  }
+}
