@@ -1,3 +1,4 @@
+// src/pages/ReportDetailPage.tsx
 import { useLocation } from 'react-router-dom'
 import Layout from '../components/Layout'
 
@@ -20,28 +21,27 @@ export default function ReportDetailPage() {
 
   return (
     <Layout>
-      <div className="mt-6">
-        <h2 className="text-2xl font-bold mb-2">{filename}</h2>
-        <p className="text-lg mb-4">Summary</p>
+      <div className="w-full max-w-5xl mx-auto px-8 mt-6">
+        <h2 className="text-2xl font-bold mb-4">{filename}</h2>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="border p-4 bg-white">
+        <p className="text-lg mb-2">Summary</p>
+        <div className="grid grid-cols-2 gap-6">
+          {/* Summary 박스 */}
+          <div
+            className="border-2 rounded-lg bg-white p-4"
+            style={{ borderColor: '#A3E635' }}
+          >
             <p className="text-sm whitespace-pre-line">{dummySummary}</p>
           </div>
-          <div className="border p-4 bg-white">
+
+          {/* YARA 룰 박스 */}
+          <div
+            className="border-2 rounded-lg bg-white p-4"
+            style={{ borderColor: '#A3E635' }}
+          >
             <pre className="text-sm whitespace-pre-wrap">{dummyYara}</pre>
           </div>
         </div>
-      </div>
-
-      {/* 챗봇 아이콘 */}
-      <div className="fixed bottom-4 right-4">
-        <button
-          onClick={() => alert('챗봇 연동 예정')}
-          className="bg-blue-800 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-2xl"
-        >
-          💬
-        </button>
       </div>
     </Layout>
   )

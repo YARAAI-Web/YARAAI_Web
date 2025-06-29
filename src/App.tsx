@@ -1,3 +1,4 @@
+//web\src\App.tsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Layout from './components/Layout'
@@ -9,10 +10,10 @@ import ReportDetailPage from './pages/ReportDetailPage'
 export default function App() {
   return (
     <BrowserRouter>
-      {/* 헤더는 한 번만 */}
+      {/* 최상단 Header */}
       <Header />
 
-      {/* 페이지들은 Layout 안에서 렌더링 */}
+      {/* 페이지 컨텐츠 */}
       <Layout>
         <Routes>
           <Route path="/" element={<MainPage />} />
