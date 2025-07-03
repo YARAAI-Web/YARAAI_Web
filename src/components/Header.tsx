@@ -17,9 +17,9 @@ export default function Header() {
           YARAAI
         </h1>
 
-        {/* 오른쪽 Report 버튼 */}
+        {/* 오른쪽 History 버튼 */}
         <button
-          onClick={() => navigate('/reports')}
+          onClick={() => navigate('/history')}
           style={{
             border: '2px solid #A3E635',
             padding: '0.5rem 1rem',
@@ -29,7 +29,7 @@ export default function Header() {
             bg-transparent rounded hover:bg-lime-50
           "
         >
-          Report
+          History
         </button>
       </div>
     </header>

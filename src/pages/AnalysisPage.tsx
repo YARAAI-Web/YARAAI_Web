@@ -50,13 +50,11 @@ export default function AnalysisPage() {
   const handleDownloadJSON = async () => {
     if (!filename || !data) return
 
-    // fetch original JSON report
     const res = await axios.get<AnalysisResult>(
       `http://localhost:8000/reports/${filename}`
     )
     const orig = res.data
 
-    // build in desired order, omitting summary & yara_rules
     const ordered: Partial<AnalysisResult> = {
       get_metadata: orig.get_metadata,
       get_current_address: orig.get_current_address,
@@ -68,7 +66,6 @@ export default function AnalysisPage() {
       c_code: orig.c_code,
       h_code: orig.h_code,
       virustotal: orig.virustotal,
-      // summary & yara_rules omitted
     }
 
     const blob = new Blob([JSON.stringify(ordered, null, 2)], {
@@ -98,7 +95,7 @@ export default function AnalysisPage() {
         </button>
       </div>
 
-      {/* Summary & YARA 룰 UI 그대로 */}
+      {/* Summary & YARA 룰 UI */}
       <h2 className="text-xl font-bold mb-4">Summary &amp; YARA 룰</h2>
       <div className="grid grid-cols-2 gap-6">
         <div
@@ -123,6 +120,16 @@ export default function AnalysisPage() {
             {data.yara_rules || '// YARA 룰이 없습니다.'}
           </pre>
         </div>
+      </div>
+
+      {/* ↓ 여기부터 보고서 생성 버튼 ↓ */}
+      <div className="mt-8 flex justify-center">
+        <button
+          onClick={() => navigate('/report')}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg text-lg"
+        >
+          보고서 생성 (Test)
+        </button>
       </div>
     </div>
   )

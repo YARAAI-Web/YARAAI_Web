@@ -1,46 +1,115 @@
 // src/pages/ReportDetailPage.tsx
-import { useLocation } from 'react-router-dom'
+
+import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
 import Layout from '../components/Layout'
 
-export default function ReportDetailPage() {
-  const { state } = useLocation() as { state: { filename: string } }
-  const filename = state?.filename ?? 'Unknown File'
+interface FullReport {
+  summary?: string[]
+  yara_rules?: string
+  [section: string]: any
+}
 
-  // TODO: 실제 데이터 fetch 예정
-  const dummySummary =
-    '이 파일은 외부 서버와 통신하며, 악성 행위를 포함할 가능성이 높습니다.'
-  const dummyYara = `rule suspicious_behavior {
-  meta:
-    author = "yarai"
-    description = "sample yara rule"
-  strings:
-    $a = "malware"
-  condition:
-    $a
-}`
+export default function ReportDetailPage() {
+  const { filename } = useParams<{ filename: string }>()
+  const navigate = useNavigate()
+  const [report, setReport] = useState<FullReport | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!filename) return
+    axios
+      .get<FullReport>(`http://localhost:8000/reports/${filename}`)
+      .then((res) => setReport(res.data))
+      .catch(() => setError('리포트를 불러오는 중 오류가 발생했습니다.'))
+      .finally(() => setLoading(false))
+  }, [filename])
+
+  const downloadJson = () => {
+    if (!report) return
+    const blob = new Blob([JSON.stringify(report, null, 2)], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${filename}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  if (loading)
+    return (
+      <Layout>
+        <p className="p-8 text-center">로딩 중…</p>
+      </Layout>
+    )
+  if (error)
+    return (
+      <Layout>
+        <p className="p-8 text-red-500">{error}</p>
+      </Layout>
+    )
+  if (!report)
+    return (
+      <Layout>
+        <p className="p-8">보고서를 찾을 수 없습니다.</p>
+      </Layout>
+    )
 
   return (
     <Layout>
-      <div className="w-full max-w-5xl mx-auto px-8 mt-6">
-        <h2 className="text-2xl font-bold mb-4">{filename}</h2>
+      <div className="max-w-5xl mx-auto px-8 mt-6">
+        {/* 헤더 */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">{filename}</h2>
+          <button
+            onClick={downloadJson}
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded"
+          >
+            Download JSON
+          </button>
+        </div>
 
-        <p className="text-lg mb-2">Summary</p>
+        {/* Summary & YARA 룰 */}
+        <h3 className="text-xl font-bold mb-4">Summary &amp; YARA 룰</h3>
         <div className="grid grid-cols-2 gap-6">
-          {/* Summary 박스 */}
           <div
-            className="border-2 rounded-lg bg-white p-4"
+            className="border-2 rounded-lg p-4 min-h-[200px] overflow-auto"
             style={{ borderColor: '#A3E635' }}
           >
-            <p className="text-sm whitespace-pre-line">{dummySummary}</p>
+            <h4 className="font-semibold mb-2">Summary</h4>
+            <ul className="list-decimal list-inside text-sm">
+              {report.summary && report.summary.length > 0 ? (
+                report.summary.map((line: string, idx: number) => (
+                  <li key={idx}>{line}</li>
+                ))
+              ) : (
+                <li>요약 내용이 없습니다.</li>
+              )}
+            </ul>
           </div>
+          <div
+            className="border-2 rounded-lg p-4 min-h-[200px] overflow-auto"
+            style={{ borderColor: '#A3E635' }}
+          >
+            <h4 className="font-semibold mb-2">YARA 룰</h4>
+            <pre className="whitespace-pre-wrap text-sm">
+              {report.yara_rules || '// YARA 룰이 없습니다.'}
+            </pre>
+          </div>
+        </div>
 
-          {/* YARA 룰 박스 */}
-          <div
-            className="border-2 rounded-lg bg-white p-4"
-            style={{ borderColor: '#A3E635' }}
+        {/* 뒤로 가기 */}
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => navigate('/report')}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg"
           >
-            <pre className="text-sm whitespace-pre-wrap">{dummyYara}</pre>
-          </div>
+            목록으로 돌아가기
+          </button>
         </div>
       </div>
     </Layout>
