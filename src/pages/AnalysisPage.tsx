@@ -5,6 +5,16 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 interface AnalysisResult {
+  get_metadata: Record<string, any>
+  get_current_address: string
+  get_current_function: Record<string, any>
+  get_entry_points: any[]
+  file_entropy: number
+  string_stats: Record<string, any>
+  pe_headers: Record<string, any>
+  c_code: string[]
+  h_code: string[]
+  virustotal: Record<string, any>
   summary: string[]
   yara_rules: string
 }
@@ -37,26 +47,39 @@ export default function AnalysisPage() {
     })()
   }, [filename, navigate])
 
-  const handleDownloadJSON = () => {
-    if (!data) return
-    const payload = {
-      summary: data.summary,
-      yara_rules: data.yara_rules,
+  const handleDownloadJSON = async () => {
+    if (!filename || !data) return
+
+    // fetch original JSON report
+    const res = await axios.get<AnalysisResult>(
+      `http://localhost:8000/reports/${filename}`
+    )
+    const orig = res.data
+
+    // build in desired order, omitting summary & yara_rules
+    const ordered: Partial<AnalysisResult> = {
+      get_metadata: orig.get_metadata,
+      get_current_address: orig.get_current_address,
+      get_current_function: orig.get_current_function,
+      get_entry_points: orig.get_entry_points,
+      file_entropy: orig.file_entropy,
+      string_stats: orig.string_stats,
+      pe_headers: orig.pe_headers,
+      c_code: orig.c_code,
+      h_code: orig.h_code,
+      virustotal: orig.virustotal,
+      // summary & yara_rules omitted
     }
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+
+    const blob = new Blob([JSON.stringify(ordered, null, 2)], {
       type: 'application/json',
     })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${filename}.summary.json`
+    a.download = `${filename}.json`
     a.click()
     URL.revokeObjectURL(url)
-  }
-
-  const handleDownloadReport = () => {
-    // 테스트용 스텁: 나중에 PDF 다운로드 로직으로 대체 예정
-    alert('Report PDF 다운로드 테스트용 버튼입니다.')
   }
 
   if (loading) return <div className="p-8">로딩 중…</div>
@@ -65,14 +88,8 @@ export default function AnalysisPage() {
 
   return (
     <div className="p-8">
-      {/* 버튼 영역 */}
-      <div className="mb-6 flex justify-end space-x-2">
-        <button
-          onClick={handleDownloadReport}
-          className="border border-green-600 text-green-600 hover:bg-green-50 font-semibold px-4 py-2 rounded"
-        >
-          Download Report
-        </button>
+      {/* Download 버튼 */}
+      <div className="mb-6 text-right">
         <button
           onClick={handleDownloadJSON}
           className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded"
@@ -81,16 +98,15 @@ export default function AnalysisPage() {
         </button>
       </div>
 
-      {/* Summary & YARA 룰 박스 */}
+      {/* Summary & YARA 룰 UI 그대로 */}
       <h2 className="text-xl font-bold mb-4">Summary &amp; YARA 룰</h2>
       <div className="grid grid-cols-2 gap-6">
-        {/* Summary 박스 */}
         <div
-          className="border-2 rounded-lg bg-white p-4"
+          className="border-2 rounded-lg bg-white p-4 h-64 overflow-auto"
           style={{ borderColor: '#A3E635' }}
         >
           <h3 className="font-semibold mb-2 text-sm">Summary</h3>
-          <ul className="list-decimal list-inside text-sm h-64 overflow-auto">
+          <ul className="list-decimal list-inside text-sm">
             {data.summary.length > 0 ? (
               data.summary.map((line, i) => <li key={i}>{line}</li>)
             ) : (
@@ -98,14 +114,12 @@ export default function AnalysisPage() {
             )}
           </ul>
         </div>
-
-        {/* YARA 룰 박스 */}
         <div
-          className="border-2 rounded-lg bg-white p-4"
+          className="border-2 rounded-lg bg-white p-4 h-64 overflow-auto"
           style={{ borderColor: '#A3E635' }}
         >
           <h3 className="font-semibold mb-2 text-sm">YARA 룰</h3>
-          <pre className="whitespace-pre-wrap text-sm h-64 overflow-auto">
+          <pre className="whitespace-pre-wrap text-sm">
             {data.yara_rules || '// YARA 룰이 없습니다.'}
           </pre>
         </div>
