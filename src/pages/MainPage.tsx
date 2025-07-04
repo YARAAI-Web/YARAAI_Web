@@ -11,7 +11,9 @@ export default function MainPage() {
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
-    if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0])
+    if (e.dataTransfer.files.length > 0) {
+      setFile(e.dataTransfer.files[0])
+    }
   }, [])
 
   const handleFileChange = useCallback(
@@ -26,13 +28,15 @@ export default function MainPage() {
     setLoading(true)
     const form = new FormData()
     form.append('file', file)
+
     try {
       const res = await axios.post<{ filename: string }>(
         'http://localhost:8000/upload',
         form,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       )
-      navigate('/analysis', { state: { filename: res.data.filename } })
+      // **분석 페이지로** URL 파라미터 전달
+      navigate(`/analysis/${res.data.filename}`)
     } catch (err: any) {
       console.error(err)
       alert(err.response?.data?.detail || '파일 업로드 중 오류가 발생했습니다.')
@@ -44,13 +48,13 @@ export default function MainPage() {
   return (
     <Layout>
       <div className="flex flex-col items-center mt-20">
-        {/* Drop zone (800×400px) */}
+        {/* Drop zone */}
         <div
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           onClick={() => document.getElementById('fileInput')?.click()}
           className="w-[800px] h-[400px] bg-white rounded-lg flex items-center justify-center cursor-pointer"
-          style={{ border: '2px solid #A3E635' }} // 연두색 border
+          style={{ border: '2px solid #A3E635' }}
         >
           {file ? (
             <span className="text-black text-[1.5rem] truncate">
@@ -68,7 +72,7 @@ export default function MainPage() {
           />
         </div>
 
-        {/* Analysis 버튼 (300×75px) */}
+        {/* Analysis 버튼 */}
         <button
           onClick={handleAnalysis}
           disabled={!file || loading}
