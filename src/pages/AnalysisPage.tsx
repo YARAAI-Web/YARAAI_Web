@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+// src/pages/AnalysisPage.tsx
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import GPTSection from '../components/GPTSection'
 
 interface AnalysisResult {
   get_metadata: {
@@ -12,17 +12,14 @@ interface AnalysisResult {
     format?: string
     filesize?: string
   }
-  summary?: string[]
-  yara_rules?: string
   tags?: string[]
-  report_id?: string
-  submitted_at?: string
+  // report_id 제거
 }
 
 const SECTIONS = [
   '❶ 정적 분석 결과파일 구조',
   '❷ 동적 분석 결과 (Behavioral) 프로세스 행위',
-  '❸ Call Graph → 이거 어떻게 할지 미정(코드를 짜긴함)',
+  '❸ Call Graph → 인터랙티브 그래프',
   '❹ MITRE ATT&CK 매핑 / ATT&CK ID기법',
   '❺ Artifacts 덤프 파일',
   '❻ 인사이트/위협 및 위험 요약',
@@ -36,10 +33,19 @@ export default function AnalysisPage() {
 
   const [filename, setFilename] = useState<string | null>(null)
   const [data, setData] = useState<AnalysisResult | null>(null)
+  const [submissionDate, setSubmissionDate] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentSection, setCurrentSection] = useState(0)
 
+  // GPT 응답 캐시
+  const [allTexts, setAllTexts] = useState<string[]>(
+    Array(SECTIONS.length).fill('로딩 중…')
+  )
+  // HTML 다운로드용 off-screen 컨테이너
+  const htmlRef = useRef<HTMLDivElement>(null)
+
+  // 1) filename 체크
   useEffect(() => {
     if (!rawFilename) {
       navigate('/')
@@ -48,17 +54,54 @@ export default function AnalysisPage() {
     setFilename(rawFilename)
   }, [rawFilename, navigate])
 
+  // 2) 리포트 메타 불러오기 + 제출일시 저장 + GPT 응답 1~7 생성
   useEffect(() => {
     if (!filename) return
     axios
       .get<AnalysisResult>(`http://localhost:8000/reports/${filename}`)
-      .then(res => setData(res.data))
-      .catch(err => setError(err.response?.data?.detail || err.message))
+      .then((res) => {
+        setData(res.data)
+        setSubmissionDate(new Date().toLocaleString())
+        // 섹션별 GPT 결과 요청(3번 제외)
+        SECTIONS.forEach((_, idx) => {
+          if (idx === 2) return
+          axios
+            .post<{ text: string }>('http://localhost:8000/api/section', {
+              sectionId: idx + 1,
+              metadata: {
+                module: res.data.get_metadata.module,
+                sha256: res.data.get_metadata.sha256,
+                fileType: res.data.get_metadata.format || '',
+                fileSize: res.data.get_metadata.filesize || '',
+              },
+            })
+            .then((r) => {
+              setAllTexts((prev) => {
+                const a = [...prev]
+                a[idx] = r.data.text
+                return a
+              })
+            })
+            .catch(() => {
+              setAllTexts((prev) => {
+                const a = [...prev]
+                a[idx] = '(불러오기 실패)'
+                return a
+              })
+            })
+        })
+      })
+      .catch((err) => setError(err.response?.data?.detail || err.message))
       .finally(() => setLoading(false))
-  }, [filename])
+  }, [filename, navigate])
 
-  const handleDownloadJSON = () => {
-    if (!data || !filename) return
+  if (loading) return <div className="p-8 text-center">로딩 중…</div>
+  if (error) return <div className="p-8 text-red-500">오류 발생: {error}</div>
+  if (!data || !filename)
+    return <div className="p-8">분석 결과를 찾을 수 없습니다.</div>
+
+  // JSON 다운로드
+  const downloadJSON = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
     })
@@ -70,98 +113,160 @@ export default function AnalysisPage() {
     URL.revokeObjectURL(url)
   }
 
-  if (loading) return <div className="p-8 text-center">로딩 중…</div>
-  if (error) return <div className="p-8 text-red-500">오류 발생: {error}</div>
-  if (!data || !filename) return <div className="p-8">분석 결과를 찾을 수 없습니다.</div>
-
-  const metadataForGPT = {
-    module: data.get_metadata.module,
-    hash: data.get_metadata.sha256,
-    submittedAt: data.submitted_at || new Date().toLocaleString(),
-    md5: data.get_metadata.md5,
-    sha1: data.get_metadata.sha1,
-    fileType: data.get_metadata.format || '',
-    fileSize: data.get_metadata.filesize || '',
+  // HTML 다운로드
+  const downloadHTML = () => {
+    if (!htmlRef.current) return
+    const content = htmlRef.current.innerHTML
+    const full = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>보고서 - ${filename}</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .header { border:2px solid #000; padding:10px; display:flex; justify-content:space-between; margin-bottom:20px; }
+    h2 { color:#0F3ADA; margin-top:30px; }
+    .section { margin-bottom: 20px; }
+    pre { background:#f7f7f7; padding:10px; overflow: auto; }
+    .iframe-container { border:1px solid #ccc; height:500px; }
+  </style>
+</head>
+<body>
+  ${content}
+</body>
+</html>`
+    const blob = new Blob([full], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${filename}.html`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      {/* 상단 요약 박스 */}
-      <div className="px-8 pt-8 pb-2">
-        <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-4 justify-between items-start">
-          <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md shadow-inner h-full">
-            Likely Malicious
+    <>
+      {/* OFF-SCREEN: HTML export */}
+      <div
+        ref={htmlRef}
+        style={{ position: 'absolute', top: -9999, left: -9999, width: 800 }}
+      >
+        <div className="header">
+          <div>
+            <strong>Name:</strong> {filename}
           </div>
-          <div className="flex-1 pl-6 space-y-2">
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-800">
-              <div><strong>Name:</strong> {filename}</div>
-              <div><strong>SHA-256:</strong> {data.get_metadata.sha256}</div>
-              <div><strong>Report ID:</strong> {data.report_id || '—'}</div>
-              <div><strong>Submission Date:</strong> {data.submitted_at || '—'}</div>
-            </div>
-            <div className="flex flex-wrap gap-2 pt-2">
-              {(data.tags || []).map((tag, i) => (
-                <span
-                  key={i}
-                  className="px-3 py-1 text-xs rounded border bg-gray-100 text-gray-700"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+          <div>
+            <strong>SHA-256:</strong> {data.get_metadata.sha256}
           </div>
-          <button
-            onClick={handleDownloadJSON}
-            className="ml-4 mt-1 bg-[#A0C3FF] hover:bg-[#B8D4FF] text-[#0F3ADA] font-semibold px-4 py-2 rounded shadow"
-          >
-            ⬇ JSON
-          </button>
+          <div>
+            <strong>Submission Date:</strong> {submissionDate}
+          </div>
         </div>
-      </div>
-
-      {/* 본문: 좌측 네비 + 우측 콘텐츠 */}
-      <div className="flex flex-1 px-8 pb-8 gap-6">
-        {/* 좌측 섹션 네비 */}
-        <div className="w-[260px] bg-gray-50 border-r p-4 space-y-2">
-          {SECTIONS.map((label, idx) => (
-            <div
-              key={idx}
-              onClick={() => setCurrentSection(idx)}
-              className={`cursor-pointer h-[48px] flex items-center px-4 border-l-4 text-sm font-medium transition-all rounded-md ${
-                currentSection === idx
-                  ? 'bg-white border-[#0F3ADA] text-[#0F3ADA] shadow-sm'
-                  : 'bg-[#6DA2F9] border-transparent text-white hover:bg-[#2F5BFD]'
-              }`}
-            >
-              {label}
-            </div>
-          ))}
-        </div>
-
-        {/* 우측 콘텐츠 */}
-        <div className="flex-1 overflow-auto">
-          <section className="bg-white shadow rounded-xl border-l-4 border-[#0F3ADA] p-4 h-full">
-            <h2 className="text-xl font-bold text-[#0F3ADA] mb-4">
-              {SECTIONS[currentSection]}
-            </h2>
-
-            {currentSection === 2 ? (
-              <iframe
-                key={`callgraph-${filename}`}
-                src={`http://localhost:8000/static/callgraphs/${filename.replace(/\.exe$/i, '')}.html`}
-                title="Call Graph"
-                className="w-full h-[800px] border-none rounded"
-                sandbox="allow-scripts allow-same-origin"
-              />
+        {SECTIONS.map((title, idx) => (
+          <div className="section" key={idx}>
+            <h2>{title}</h2>
+            {idx === 2 ? (
+              <div className="iframe-container">
+                <iframe
+                  src={`http://localhost:8000/static/callgraphs/${filename.replace(
+                    /\.exe$/i,
+                    ''
+                  )}.html`}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                />
+              </div>
+            ) : idx === 7 ? (
+              <pre>{JSON.stringify(data, null, 2)}</pre>
             ) : (
-              <GPTSection
-                sectionId={currentSection + 1}
-                metadata={metadataForGPT}
-              />
+              <pre>{allTexts[idx]}</pre>
             )}
-          </section>
+          </div>
+        ))}
+      </div>
+
+      {/* SCREEN UI */}
+      <div className="flex flex-col min-h-screen bg-white">
+        {/* 상단 */}
+        <div className="px-8 pt-8 pb-2">
+          <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-4 justify-between items-start">
+            <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md h-full">
+              Likely Malicious
+            </div>
+            <div className="flex-1 pl-6 space-y-2">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                <div>
+                  <strong>Name:</strong> {filename}
+                </div>
+                <div>
+                  <strong>SHA-256:</strong> {data.get_metadata.sha256}
+                </div>
+                <div>
+                  <strong>Submission Date:</strong> {submissionDate}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 ml-4 mt-1">
+              <button
+                onClick={downloadJSON}
+                className="bg-blue-200 hover:bg-blue-300 px-4 py-2 rounded"
+              >
+                JSON
+              </button>
+              <button
+                onClick={downloadHTML}
+                className="bg-purple-200 hover:bg-purple-300 px-4 py-2 rounded"
+              >
+                HTML
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 본문 */}
+        <div className="flex flex-1 px-8 pb-8 gap-6">
+          <div className="w-[260px] bg-gray-50 border-r p-4 space-y-2">
+            {SECTIONS.map((label, idx) => (
+              <div
+                key={idx}
+                onClick={() => setCurrentSection(idx)}
+                className={`cursor-pointer h-12 flex items-center px-4 border-l-4 rounded ${
+                  currentSection === idx
+                    ? 'bg-white border-blue-600 text-blue-600'
+                    : 'bg-blue-400 border-transparent text-white hover:bg-blue-500'
+                }`}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+          <div className="flex-1 overflow-auto">
+            <section className="bg-white shadow rounded-xl border-l-4 border-[#0F3ADA] p-4 h-full">
+              <h2 className="text-xl font-bold text-[#0F3ADA] mb-4">
+                {SECTIONS[currentSection]}
+              </h2>
+              {currentSection === 2 ? (
+                <iframe
+                  key={`callgraph-${filename}`}
+                  src={`http://localhost:8000/static/callgraphs/${filename.replace(
+                    /\.exe$/i,
+                    ''
+                  )}.html`}
+                  className="w-full h-[800px] border-none rounded"
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              ) : currentSection === 7 ? (
+                <pre className="whitespace-pre-wrap">
+                  {JSON.stringify(data, null, 2)}
+                </pre>
+              ) : (
+                <pre className="whitespace-pre-wrap">
+                  {allTexts[currentSection]}
+                </pre>
+              )}
+            </section>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -1,3 +1,5 @@
+# 그래프 성공 main.py
+
 from dotenv import load_dotenv
 import os, uuid, json
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
@@ -56,10 +58,18 @@ async def upload_and_analyze(file: UploadFile = File(...)):
 
     base      = os.path.splitext(unique_name)[0]
     meta_path = os.path.join(META_DIR, f"{base}.json")
+    html_path = os.path.join(STATIC_DIR, f"{base}.html")
+    
     with open(meta_path, "w", encoding="utf-8") as mf:
         json.dump(report, mf, ensure_ascii=False, indent=2)
+    
+    # 즉시 Call Graph 생성
+    try:
+        generate_call_graph(meta_path, html_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CallGraph 생성 실패: {e}")
 
-    return {"filename": unique_name}
+    return {"filename": unique_name, "callgraph": f"/static/callgraphs/{base}.html"}
 
 # 📋 리포트 목록 조회
 @app.get("/reports")
@@ -156,10 +166,9 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
         3: "❸ Call Graph",
         4: "❹ MITRE ATT&CK 매핑",
         5: "❺ Artifacts 덤프 파일",
-        6: "❻ 인사이트 및 위협 요약",
-        7: "❼ 보안 권고 사항",
-        8: "❽ CWE 기반 권고 및 시각화",
-        9: "❾ 분석 JSON 요약",
+        6: "❻ 위협 흐름 및 목적 요약",
+        7: "❽ CWE 기반 권고",
+        8: "❾ 분석 JSON 요약",
     }
 
     section_title = section_map.get(req.sectionId)
@@ -191,45 +200,28 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 {section_prompt}
 """
 
+    # GPT 응답
     try:
-        response = client.chat.completions.create(
+        resp = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
-            temperature=0.7,
+            temperature=0.7
         )
-        result_text = response.choices[0].message.content.strip()
-
-        # 🔍 Call Graph 처리
-        if req.sectionId == 3:
-            # 실제 저장된 JSON 파일 이름은 module 기준
-            filename = meta.get("module", "").rsplit(".", 1)[0]
-            if not filename:
-                raise HTTPException(status_code=400, detail="Missing file name")
-
-            report_path = os.path.join(META_DIR, f"{filename}.json")
-            html_path   = os.path.join(STATIC_DIR, f"{filename}.html")
-
-            print("CallGraph 경로 체크:")
-            print("- JSON:", report_path)
-            print("- HTML:", html_path)
-
-            if not os.path.exists(report_path):
-                raise HTTPException(status_code=404, detail="CallGraph 대상 메타 JSON이 존재하지 않습니다.")
-
-            try:
-                generate_call_graph(report_path, html_path)
-                print("✅ CallGraph 생성 완료")
-            except Exception as e:
-                print("CallGraph 생성 실패:", e)
-                raise HTTPException(status_code=500, detail="CallGraph 생성 실패")
-
-            return {
-                "text": result_text,
-                "callgraph_html": f"/static/callgraphs/{filename}.html"
-            }
-        return {"text": result_text}
-
+        text = resp.choices[0].message.content.strip()
     except Exception as e:
-        print("OpenAI API error:", e)
-        raise HTTPException(status_code=500, detail="OpenAI API error")
+        raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
+
+    # 섹션 3인 경우, Call Graph 생성 및 경로 포함
+    if req.sectionId == 3:
+        filename = meta.get("module","").rsplit(".",1)[0]
+        report_path = os.path.join(META_DIR, f"{filename}.json")
+        html_path = os.path.join(STATIC_DIR, f"{filename}.html")
+        try:
+            generate_call_graph(report_path, html_path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"CallGraph 생성 실패: {e}")
+        return {"text": text, "callgraph_html": f"/static/callgraphs/{filename}.html"}
+
+    return {"text": text}
+
