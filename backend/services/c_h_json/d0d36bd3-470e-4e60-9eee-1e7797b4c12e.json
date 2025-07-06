@@ -1,102 +1,6 @@
 {
-  "get_metadata": {
-    "path": "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web_2\\backend\\uploads\\c80cd80d-88bf-4b2e-9cd2-7725e3009d86.exe",
-    "module": "c80cd80d-88bf-4b2e-9cd2-7725e3009d86.exe",
-    "base": "0x140000000",
-    "size": "0x13d000",
-    "md5": "5a75d0870cf22d2e8cdf8cbc31fad3f1",
-    "sha256": "7257766c7a1d0bf3fe2f6634877c4238d19bd7acd458a828f7851e145e7e295a",
-    "crc32": "0x976374",
-    "filesize": "0x138000"
-  },
-  "get_current_address": "0x140008200",
-  "get_current_function": "0x140008200",
-  "get_entry_points": [
-    {
-      "address": "0x140008200",
-      "name": "WinMainCRTStartup",
-      "size": "0x12"
-    }
-  ],
-  "file_entropy": 7.9464467275818835,
-  "string_stats": {
-    "string_count": 238,
-    "avg_str_len": 0.0,
-    "max_str_len": 0
-  },
-  "pe_headers": {
-    "file_name": "c80cd80d-88bf-4b2e-9cd2-7725e3009d86.exe",
-    "machine": "0x8664",
-    "number_of_sections": 6,
-    "time_date_stamp": "0xae1bc4f8",
-    "pointer_to_symbol_table": "0x0",
-    "number_of_symbols": 0,
-    "size_of_optional_header": 240,
-    "characteristics": "0x22",
-    "entry_point": "0x8200",
-    "image_base": "0x140000000",
-    "section_alignment": "0x1000",
-    "file_alignment": "0x200",
-    "subsystem": "0x2",
-    "dll_characteristics": "0xc160",
-    "sections": [
-      {
-        "name": ".text",
-        "virtual_address": "0x1000",
-        "virtual_size": "0x7b80",
-        "raw_size": "0x7c00",
-        "characteristics": "0x60000020"
-      },
-      {
-        "name": ".rdata",
-        "virtual_address": "0x9000",
-        "virtual_size": "0x22c8",
-        "raw_size": "0x2400",
-        "characteristics": "0x40000040"
-      },
-      {
-        "name": ".data",
-        "virtual_address": "0xc000",
-        "virtual_size": "0x1f00",
-        "raw_size": "0x400",
-        "characteristics": "0xc0000040"
-      },
-      {
-        "name": ".pdata",
-        "virtual_address": "0xe000",
-        "virtual_size": "0x408",
-        "raw_size": "0x600",
-        "characteristics": "0x40000040"
-      },
-      {
-        "name": ".rsrc",
-        "virtual_address": "0xf000",
-        "virtual_size": "0x12cfd2",
-        "raw_size": "0x12d000",
-        "characteristics": "0x40000040"
-      },
-      {
-        "name": ".reloc",
-        "virtual_address": "0x13c000",
-        "virtual_size": "0x20",
-        "raw_size": "0x200",
-        "characteristics": "0x42000040"
-      }
-    ]
-  },
-  "virustotal": {
-    "sha256": "7257766c7a1d0bf3fe2f6634877c4238d19bd7acd458a828f7851e145e7e295a",
-    "type_tag": "peexe",
-    "popular_threat_name": null,
-    "tags": [
-      "peexe",
-      "malware",
-      "executes-dropped-file",
-      "64bits"
-    ]
-  },
   "c_code": [
-    "#include \"c80cd80d-88bf-4b2e-9cd2-7725e3009d86.h\"",
+    "#include \"d0d36bd3-470e-4e60-9eee-1e7797b4c12e.h\"",
     "",
     "HRESULT __stdcall StringCchCopyA(STRSAFE_LPSTR pszDest, size_t cchDest, STRSAFE_LPCSTR pszSrc)",
     "{",
@@ -5392,6 +5296,15 @@
     "void *__cdecl memset_0(void *a1, int Val, size_t Size);",
     "__int64 __fastcall guard_dispatch_icall_nop();"
   ],
-  "summary": [],
-  "yara_rules": ""
+  "virustotal": {
+    "sha256": "7257766c7a1d0bf3fe2f6634877c4238d19bd7acd458a828f7851e145e7e295a",
+    "type_tag": "peexe",
+    "popular_threat_name": null,
+    "tags": [
+      "peexe",
+      "malware",
+      "executes-dropped-file",
+      "64bits"
+    ]
+  }
 }

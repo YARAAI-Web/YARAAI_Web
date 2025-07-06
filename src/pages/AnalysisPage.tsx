@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import GPTSection from '../components/GPTSection'
 
 interface AnalysisResult {
   get_metadata: {
@@ -13,7 +14,6 @@ interface AnalysisResult {
     filesize?: string
   }
   tags?: string[]
-  // report_id 제거
 }
 
 const SECTIONS = [
@@ -24,7 +24,6 @@ const SECTIONS = [
   '❺ Artifacts 덤프 파일',
   '❻ 인사이트/위협 및 위험 요약',
   '❼ CWE 기반 보안 권고사항 (Recommendations)',
-  '❽ 부록 (분석 JSON)',
 ]
 
 export default function AnalysisPage() {
@@ -38,14 +37,13 @@ export default function AnalysisPage() {
   const [error, setError] = useState<string | null>(null)
   const [currentSection, setCurrentSection] = useState(0)
 
-  // GPT 응답 캐시
+  // GPT 응답 캐시 (1~6번)
   const [allTexts, setAllTexts] = useState<string[]>(
     Array(SECTIONS.length).fill('로딩 중…')
   )
   // HTML 다운로드용 off-screen 컨테이너
   const htmlRef = useRef<HTMLDivElement>(null)
 
-  // 1) filename 체크
   useEffect(() => {
     if (!rawFilename) {
       navigate('/')
@@ -54,15 +52,16 @@ export default function AnalysisPage() {
     setFilename(rawFilename)
   }, [rawFilename, navigate])
 
-  // 2) 리포트 메타 불러오기 + 제출일시 저장 + GPT 응답 1~7 생성
   useEffect(() => {
     if (!filename) return
+
     axios
       .get<AnalysisResult>(`http://localhost:8000/reports/${filename}`)
       .then((res) => {
         setData(res.data)
         setSubmissionDate(new Date().toLocaleString())
-        // 섹션별 GPT 결과 요청(3번 제외)
+
+        // 섹션별 GPT 결과 요청 (3번 제외)
         SECTIONS.forEach((_, idx) => {
           if (idx === 2) return
           axios
@@ -93,14 +92,13 @@ export default function AnalysisPage() {
       })
       .catch((err) => setError(err.response?.data?.detail || err.message))
       .finally(() => setLoading(false))
-  }, [filename, navigate])
+  }, [filename])
 
   if (loading) return <div className="p-8 text-center">로딩 중…</div>
   if (error) return <div className="p-8 text-red-500">오류 발생: {error}</div>
   if (!data || !filename)
     return <div className="p-8">분석 결과를 찾을 수 없습니다.</div>
 
-  // JSON 다운로드
   const downloadJSON = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
@@ -113,7 +111,6 @@ export default function AnalysisPage() {
     URL.revokeObjectURL(url)
   }
 
-  // HTML 다운로드
   const downloadHTML = () => {
     if (!htmlRef.current) return
     const content = htmlRef.current.innerHTML
@@ -127,8 +124,8 @@ export default function AnalysisPage() {
     .header { border:2px solid #000; padding:10px; display:flex; justify-content:space-between; margin-bottom:20px; }
     h2 { color:#0F3ADA; margin-top:30px; }
     .section { margin-bottom: 20px; }
-    pre { background:#f7f7f7; padding:10px; overflow: auto; }
     .iframe-container { border:1px solid #ccc; height:500px; }
+    pre { white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -173,10 +170,9 @@ export default function AnalysisPage() {
                     ''
                   )}.html`}
                   style={{ width: '100%', height: '100%', border: 'none' }}
+                  sandbox="allow-scripts allow-same-origin"
                 />
               </div>
-            ) : idx === 7 ? (
-              <pre>{JSON.stringify(data, null, 2)}</pre>
             ) : (
               <pre>{allTexts[idx]}</pre>
             )}
@@ -186,7 +182,6 @@ export default function AnalysisPage() {
 
       {/* SCREEN UI */}
       <div className="flex flex-col min-h-screen bg-white">
-        {/* 상단 */}
         <div className="px-8 pt-8 pb-2">
           <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-4 justify-between items-start">
             <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md h-full">
@@ -222,7 +217,6 @@ export default function AnalysisPage() {
           </div>
         </div>
 
-        {/* 본문 */}
         <div className="flex flex-1 px-8 pb-8 gap-6">
           <div className="w-[260px] bg-gray-50 border-r p-4 space-y-2">
             {SECTIONS.map((label, idx) => (
@@ -254,10 +248,6 @@ export default function AnalysisPage() {
                   className="w-full h-[800px] border-none rounded"
                   sandbox="allow-scripts allow-same-origin"
                 />
-              ) : currentSection === 7 ? (
-                <pre className="whitespace-pre-wrap">
-                  {JSON.stringify(data, null, 2)}
-                </pre>
               ) : (
                 <pre className="whitespace-pre-wrap">
                   {allTexts[currentSection]}
