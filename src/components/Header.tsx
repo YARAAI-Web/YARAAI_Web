@@ -1,33 +1,29 @@
+// src/components/Header.tsx
 import { useNavigate } from 'react-router-dom'
+import Logo from '../assets/YARRAI_LOGO_2.png'
 
 export default function Header() {
   const navigate = useNavigate()
 
   return (
     <header
-      className="w-full bg-gray-300 border-b-2"
+      className="w-full border-b-2 bg-white"
       style={{ borderColor: '#A3E635' }}
     >
       <div className="mx-auto max-w-5xl flex items-center justify-between px-8 py-4">
-        {/* 왼쪽 로고 */}
-        <h1
-          className="text-[2rem] font-bold text-black cursor-pointer"
+        <img
+          src={Logo}
+          alt="YARAAI"
           onClick={() => navigate('/')}
-        >
-          YARAAI
-        </h1>
+          className="w-auto cursor-pointer"
+          style={{ height: '5rem' }}
+        />
 
-        {/* 오른쪽 History 버튼 */}
+        {/* History 버튼 */}
         <button
           onClick={() => navigate('/history')}
-          style={{
-            border: '2px solid #A3E635',
-            padding: '0.5rem 1rem',
-          }}
-          className="
-            text-[1.5rem] font-medium text-gray-900
-            bg-transparent rounded hover:bg-lime-50
-          "
+          className="text-[2rem] font-medium text-gray-900 bg-transparent rounded hover:bg-lime-50"
+          style={{ border: '2px solid #A3E635', padding: '0.5rem 1rem' }}
         >
           History
         </button>
