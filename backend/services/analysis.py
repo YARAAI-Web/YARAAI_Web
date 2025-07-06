@@ -11,6 +11,7 @@ from .mcp_collector import mcp_run
 from .c_h_run import analyze_file as run_analysis, OUTPUT_DIR
 # (2) PE 헤더 파싱
 from .extract_pe_headers import extract_headers
+from .CAPA import map_mitre
 import psutil
 
 IDA_PATH = r"C:\Program Files\IDA Professional 9.1\ida.exe"
@@ -38,7 +39,6 @@ def kill_process_using_port(port: int):
 def analyze_file(file_path: str) -> Dict[str, Any]:
     ida_cmd = f'"{IDA_PATH}" -A "{file_path}"'
     subprocess.Popen(ida_cmd, shell=True)
-    time.sleep(10)
 
     mcp = mcp_run()
     kill_process_using_port(13337)
@@ -59,10 +59,17 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     
     with open(ch_json, "r", encoding="utf-8") as f:
         ch_data = json.load(f)
+    print("c,h생성 완료")
 
     # 4) Summary & YARA rule (ch_data 안에 들어 있다고 가정)
     summary     = ch_data.get("summary", [])        # e.g. ["(1) 프로세스 행위: …", "(2) 레지스트리 조작: …", …]
     yara_rules  = ch_data.get("yara_rules", "")     # e.g. "rule suspicious_behavior { ... }"
+    print("YARA 완료")
+
+    capa = map_mitre.map_mitre(file_path)
+    with open(capa[0], 'r', encoding='utf-8') as f:
+        capa_rules = json.load(f)
+    MITRE = capa[1]
 
     # 5) 최종 리포트 조립
     report: Dict[str, Any] = {
@@ -85,6 +92,8 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
         # 추가: summary & yara_rules
         "summary":              summary,
         "yara_rules":           yara_rules,
+        "capa_rules":           capa_rules,
+        "MITRE ATT&CK":         MITRE
     }
 
     return report
