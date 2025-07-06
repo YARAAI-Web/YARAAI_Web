@@ -9,14 +9,13 @@ interface GPTSectionProps {
 }
 
 export default function GPTSection({ sectionId, metadata }: GPTSectionProps) {
-  const [content, setContent] = useState<string>('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [content, setContent] = useState<string>('')       // GPT 응답 텍스트
+  const [loading, setLoading] = useState(true)             // 로딩 상태
+  const [error, setError] = useState<string | null>(null)  // 에러 메시지
 
   useEffect(() => {
     setLoading(true)
     setError(null)
-    // 자리만 차지하도록
     fetchSection(sectionId, metadata)
       .then((res) => setContent(res.text))
       .catch((e) => setError(e.message))
@@ -26,16 +25,17 @@ export default function GPTSection({ sectionId, metadata }: GPTSectionProps) {
   if (loading) return <p className="text-gray-500">로딩 중…</p>
   if (error)
     return (
-      <p className="text-red-600">
+      <p className="text-red-600 whitespace-pre-wrap">
         GPT 응답 불러오는 중 오류:
         <br />
         <code>{error}</code>
       </p>
     )
+
   return (
     <div className="prose prose-sm text-gray-800">
-      {content.split('\n').map((l, i) => (
-        <p key={i}>{l}</p>
+      {content.split('\n').map((line, i) => (
+        <p key={i}>{line}</p>
       ))}
     </div>
   )
