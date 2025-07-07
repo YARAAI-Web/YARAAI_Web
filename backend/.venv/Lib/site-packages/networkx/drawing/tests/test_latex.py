@@ -51,12 +51,15 @@ def test_tikz_attributes():
     \end{tikzpicture}
 \end{figure}"""
 
-    # First, check for consistency line-by-line - if this fails, the mismatched
-    # line will be shown explicitly in the failure summary
-    for expected, actual in zip(expected_tex.split("\n"), output_tex.split("\n")):
-        assert expected == actual
-
     assert output_tex == expected_tex
+    # print(output_tex)
+    # # Pretty way to assert that A.to_document() == expected_tex
+    # content_same = True
+    # for aa, bb in zip(expected_tex.split("\n"), output_tex.split("\n")):
+    #     if aa != bb:
+    #         content_same = False
+    #         print(f"-{aa}|\n+{bb}|")
+    # assert content_same
 
 
 def test_basic_multiple_graphs():
@@ -77,6 +80,7 @@ def test_basic_multiple_graphs():
         sub_captions=captions,
         sub_labels=labels,
     )
+    # print(latex_code)
     assert "begin{document}" in latex_code
     assert "begin{figure}" in latex_code
     assert latex_code.count("begin{subfigure}") == 4
@@ -215,12 +219,15 @@ def test_basic_tikz():
         as_document=True,
     )
 
-    # First, check for consistency line-by-line - if this fails, the mismatched
-    # line will be shown explicitly in the failure summary
-    for expected, actual in zip(expected_tex.split("\n"), output_tex.split("\n")):
-        assert expected == actual
-    # Double-check for document-level consistency
     assert output_tex == expected_tex
+    # print(output_tex)
+    # # Pretty way to assert that A.to_document() == expected_tex
+    # content_same = True
+    # for aa, bb in zip(expected_tex.split("\n"), output_tex.split("\n")):
+    #     if aa != bb:
+    #         content_same = False
+    #         print(f"-{aa}|\n+{bb}|")
+    # assert content_same
 
 
 def test_exception_pos_single_graph(to_latex=nx.to_latex):
