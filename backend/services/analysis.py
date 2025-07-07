@@ -39,6 +39,7 @@ def kill_process_using_port(port: int):
 def analyze_file(file_path: str) -> Dict[str, Any]:
     ida_cmd = f'"{IDA_PATH}" -A "{file_path}"'
     subprocess.Popen(ida_cmd, shell=True)
+    time.sleep(10)
 
     mcp = mcp_run()
     kill_process_using_port(13337)

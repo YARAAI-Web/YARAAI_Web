@@ -1,0 +1,39 @@
+{
+  "c_code": [
+    "#include \"6e2b3cf9-cfb0-4d53-b3e3-216d3fdfc9b7.h\"",
+    "",
+    "__int64 start()",
+    "{",
+    "  return sub_140053160(0);",
+    "}",
+    "",
+    ""
+  ],
+  "h_code": [
+    "#include <windows.h>",
+    "#include <stdint.h>",
+    "#include <stdio.h>",
+    "",
+    "#include \"defs.h\"",
+    "",
+    "void JUMPOUT(int a) {",
+    "}",
+    "",
+    "unsigned int _bss_start__ = 0;",
+    "unsigned int __cxa_finalize = 0;",
+    "__int64 start();"
+  ],
+  "virustotal": {
+    "sha256": "7836163ad039929e6ba9c5ff660b98fc7d07b8e0b0971f31d056270c2f56125e",
+    "type_tag": "peexe",
+    "popular_threat_name": null,
+    "tags": [
+      "corrupt",
+      "upx",
+      "spreader",
+      "overlay",
+      "peexe",
+      "64bits"
+    ]
+  }
+}
