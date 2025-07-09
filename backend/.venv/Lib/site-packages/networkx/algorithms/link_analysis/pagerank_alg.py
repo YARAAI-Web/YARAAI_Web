@@ -1,7 +1,5 @@
 """PageRank analysis of graph structure."""
 
-from warnings import warn
-
 import networkx as nx
 
 __all__ = ["pagerank", "google_matrix"]
@@ -90,6 +88,7 @@ def pagerank(
     See Also
     --------
     google_matrix
+    :func:`~networkx.algorithms.bipartite.link_analysis.birank`
 
     Raises
     ------

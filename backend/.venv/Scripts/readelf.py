@@ -1,4 +1,4 @@
-#!G:\화이트햇스쿨\Web\YARRAI_Web\backend\.venv\Scripts\python.exe
+#!F:\users\WhiteHat\YARRAAI\code\YARRAI_Web\backend\.venv\Scripts\python.exe
 #-------------------------------------------------------------------------------
 # scripts/readelf.py
 #
