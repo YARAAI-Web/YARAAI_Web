@@ -33,9 +33,10 @@ export default function MainPage() {
       const res = await axios.post<{ filename: string }>(
         'http://localhost:8000/upload',
         form,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
       )
-      // **분석 페이지로** URL 파라미터 전달
       navigate(`/analysis/${res.data.filename}`)
     } catch (err: any) {
       console.error(err)
@@ -48,7 +49,7 @@ export default function MainPage() {
   return (
     <Layout>
       <div className="flex flex-col items-center mt-20">
-        {/* Drop zone */}
+        {/* 파일 드래그 & 클릭 영역 */}
         <div
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
@@ -72,8 +73,9 @@ export default function MainPage() {
           />
         </div>
 
-        {/* Analysis 버튼 */}
+        {/* Analysis 버튼 (type="button" 추가) */}
         <button
+          type="button"
           onClick={handleAnalysis}
           disabled={!file || loading}
           style={{

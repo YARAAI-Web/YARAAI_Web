@@ -2,7 +2,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import GPTSection from '../components/GPTSection'
 
 interface AnalysisResult {
   get_metadata: {
@@ -37,13 +36,15 @@ export default function AnalysisPage() {
   const [error, setError] = useState<string | null>(null)
   const [currentSection, setCurrentSection] = useState(0)
 
-  // GPT 응답 캐시 (1~6번)
+  // GPT 응답 캐시 (1~7번)
   const [allTexts, setAllTexts] = useState<string[]>(
     Array(SECTIONS.length).fill('로딩 중…')
   )
+
   // HTML 다운로드용 off-screen 컨테이너
   const htmlRef = useRef<HTMLDivElement>(null)
 
+  // filename 세팅
   useEffect(() => {
     if (!rawFilename) {
       navigate('/')
@@ -52,20 +53,23 @@ export default function AnalysisPage() {
     setFilename(rawFilename)
   }, [rawFilename, navigate])
 
+  // 메타·섹션 1~7 호출
   useEffect(() => {
     if (!filename) return
 
+    setLoading(true)
     axios
-      .get<AnalysisResult>(`http://localhost:8000/reports/${filename}`)
+      .get<AnalysisResult>(`/reports/${filename}`)
       .then((res) => {
         setData(res.data)
         setSubmissionDate(new Date().toLocaleString())
 
-        // 섹션별 GPT 결과 요청 (3번 제외)
         SECTIONS.forEach((_, idx) => {
+          // Call Graph(3번)만 건너뛰고 GPT 요청
           if (idx === 2) return
+
           axios
-            .post<{ text: string }>('http://localhost:8000/api/section', {
+            .post<{ text: string }>('/api/section', {
               sectionId: idx + 1,
               metadata: {
                 module: res.data.get_metadata.module,
@@ -76,16 +80,16 @@ export default function AnalysisPage() {
             })
             .then((r) => {
               setAllTexts((prev) => {
-                const a = [...prev]
-                a[idx] = r.data.text
-                return a
+                const copy = [...prev]
+                copy[idx] = r.data.text
+                return copy
               })
             })
             .catch(() => {
               setAllTexts((prev) => {
-                const a = [...prev]
-                a[idx] = '(불러오기 실패)'
-                return a
+                const copy = [...prev]
+                copy[idx] = '(불러오기 실패)'
+                return copy
               })
             })
         })
@@ -99,6 +103,7 @@ export default function AnalysisPage() {
   if (!data || !filename)
     return <div className="p-8">분석 결과를 찾을 수 없습니다.</div>
 
+  // JSON 다운로드
   const downloadJSON = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
@@ -111,6 +116,7 @@ export default function AnalysisPage() {
     URL.revokeObjectURL(url)
   }
 
+  // HTML 다운로드
   const downloadHTML = () => {
     if (!htmlRef.current) return
     const content = htmlRef.current.innerHTML
@@ -159,13 +165,14 @@ export default function AnalysisPage() {
             <strong>Submission Date:</strong> {submissionDate}
           </div>
         </div>
+
         {SECTIONS.map((title, idx) => (
           <div className="section" key={idx}>
             <h2>{title}</h2>
             {idx === 2 ? (
               <div className="iframe-container">
                 <iframe
-                  src={`http://localhost:8000/static/callgraphs/${filename.replace(
+                  src={`/static/callgraphs/${filename.replace(
                     /\.exe$/i,
                     ''
                   )}.html`}
@@ -241,7 +248,7 @@ export default function AnalysisPage() {
               {currentSection === 2 ? (
                 <iframe
                   key={`callgraph-${filename}`}
-                  src={`http://localhost:8000/static/callgraphs/${filename.replace(
+                  src={`/static/callgraphs/${filename.replace(
                     /\.exe$/i,
                     ''
                   )}.html`}

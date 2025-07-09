@@ -1,6 +1,7 @@
 // vite.config.ts
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
@@ -16,6 +17,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+    },
+    watch: {
+      ignored: [
+        // ignore all files under backend/services/CAPA/capa_json
+        path.resolve(__dirname, 'backend/services/CAPA/capa_json/**'),
+      ],
     },
   },
 })
