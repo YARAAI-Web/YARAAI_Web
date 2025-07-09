@@ -67,7 +67,7 @@ export default function HistoryPage() {
         {filtered.map((item, idx) => (
           <li
             key={item}
-            onClick={() => navigate(`/history/${encodeURIComponent(item)}`)}
+            onClick={() => navigate(`/analysis/${encodeURIComponent(item)}`)}
             className="flex items-center cursor-pointer text-2xl py-2 border-b-2"
             style={{ borderColor: '#A3E635' }}
           >
