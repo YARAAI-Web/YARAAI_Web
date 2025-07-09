@@ -1,0 +1,27 @@
+{
+  "c_code": [
+    "#include \"74357a18-7da2-4ad4-aa18-23556a06915a.h\"",
+    ""
+  ],
+  "h_code": [
+    "#include <windows.h>",
+    "#include <stdint.h>",
+    "#include <stdio.h>",
+    "",
+    "#include \"defs.h\"",
+    "",
+    "void JUMPOUT(int a) {",
+    "}",
+    "",
+    "unsigned int _bss_start__ = 0;",
+    "unsigned int __cxa_finalize = 0;"
+  ],
+  "virustotal": {
+    "sha256": "74df861be24e720443fbc6beb460cdd9513046e8822bb50b3df0be20e9fb4f8f",
+    "type_tag": "mz",
+    "popular_threat_name": null,
+    "tags": [
+      "mz"
+    ]
+  }
+}

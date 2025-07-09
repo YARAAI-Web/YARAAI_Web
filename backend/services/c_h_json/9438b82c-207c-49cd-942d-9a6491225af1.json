@@ -1,0 +1,42 @@
+{
+  "c_code": [
+    "#include \"9438b82c-207c-49cd-942d-9a6491225af1.h\"",
+    "",
+    "// attributes: thunk",
+    "void ReleaseLogManager()",
+    "{",
+    "}// attributes: thunk",
+    "BOOL __stdcall DllEntryPoint(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)",
+    "{",
+    "}"
+  ],
+  "h_code": [
+    "#include <windows.h>",
+    "#include <stdint.h>",
+    "#include <stdio.h>",
+    "",
+    "#include \"defs.h\"",
+    "",
+    "void JUMPOUT(int a) {",
+    "}",
+    "",
+    "unsigned int _bss_start__ = 0;",
+    "unsigned int __cxa_finalize = 0;",
+    "// attributes: thunk",
+    "void ReleaseLogManager();",
+    "// attributes: thunk",
+    "BOOL __stdcall DllEntryPoint(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved);"
+  ],
+  "virustotal": {
+    "sha256": "ccd34de9ee3b6c4d02420a76a3625ddd9bfdee8cde0de5710726e6b2fe778cc6",
+    "type_tag": "pedll",
+    "popular_threat_name": null,
+    "tags": [
+      "revoked-cert",
+      "signed",
+      "detect-debug-environment",
+      "pedll",
+      "overlay"
+    ]
+  }
+}

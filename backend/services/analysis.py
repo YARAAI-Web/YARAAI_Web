@@ -12,6 +12,7 @@ from .c_h_run import analyze_file as run_analysis, OUTPUT_DIR
 # (2) PE 헤더 파싱
 from .extract_pe_headers import extract_headers
 from .CAPA import map_mitre
+from .CWE.map_CWE import analyze_code_with_cwe
 import psutil
 
 IDA_PATH = r"C:\Program Files\IDA Professional 9.1\ida.exe"
@@ -67,10 +68,12 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     yara_rules  = ch_data.get("yara_rules", "")     # e.g. "rule suspicious_behavior { ... }"
     print("YARA 완료")
 
-    capa = map_mitre.map_mitre(file_path)
+    capa = map_mitre.map_mitre(file_path)       
     with open(capa[0], 'r', encoding='utf-8') as f:
         capa_rules = json.load(f)
     MITRE = capa[1]
+
+    CWE = analyze_code_with_cwe(ch_data)
 
     # 5) 최종 리포트 조립
     report: Dict[str, Any] = {
@@ -94,7 +97,8 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
         "summary":              summary,
         "yara_rules":           yara_rules,
         "capa_rules":           capa_rules,
-        "MITRE ATT&CK":         MITRE
+        "MITRE ATT&CK":         MITRE,
+        "CWE":                  CWE
     }
 
     return report
