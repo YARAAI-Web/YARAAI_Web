@@ -1,7 +1,10 @@
-# 그래프 성공 main.py
+# backend/main.py
 
 from dotenv import load_dotenv
-import os, uuid, json
+import os
+import uuid
+import json
+
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -16,10 +19,11 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 📁 디렉터리 경로 설정
-BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-META_DIR   = os.path.join(BASE_DIR, "meta_json")
-STATIC_DIR = os.path.join(BASE_DIR, "static", "callgraphs")
+BASE_DIR      = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR    = os.path.join(BASE_DIR, "uploads")
+META_DIR      = os.path.join(BASE_DIR, "meta_json")
+STATIC_DIR    = os.path.join(BASE_DIR, "static", "callgraphs")
+CAPA_JSON_DIR = os.path.join(BASE_DIR, "services", "CAPA", "capa_json")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(META_DIR, exist_ok=True)
@@ -37,6 +41,7 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 # 📤 파일 업로드 API
 @app.post("/upload")
@@ -56,20 +61,20 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 
-    base      = os.path.splitext(unique_name)[0]
-    meta_path = os.path.join(META_DIR, f"{base}.json")
-    html_path = os.path.join(STATIC_DIR, f"{base}.html")
+    base_uuid = os.path.splitext(unique_name)[0]
+    meta_path = os.path.join(META_DIR, f"{base_uuid}.json")
+    html_path = os.path.join(STATIC_DIR, f"{base_uuid}.html")
     
     with open(meta_path, "w", encoding="utf-8") as mf:
         json.dump(report, mf, ensure_ascii=False, indent=2)
     
-    # 즉시 Call Graph 생성
     try:
         generate_call_graph(meta_path, html_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"CallGraph 생성 실패: {e}")
 
-    return {"filename": unique_name, "callgraph": f"/static/callgraphs/{base}.html"}
+    return {"filename": unique_name, "callgraph": f"/static/callgraphs/{base_uuid}.html"}
+
 
 # 📋 리포트 목록 조회
 @app.get("/reports")
@@ -80,18 +85,19 @@ def list_reports():
     ]
     return {"reports": files}
 
+
 # 📄 특정 리포트 조회
 @app.get("/reports/{filename}")
 def get_report(filename: str):
-    base      = os.path.splitext(filename)[0]
-    meta_path = os.path.join(META_DIR, f"{base}.json")
+    base_uuid = os.path.splitext(filename)[0]
+    meta_path = os.path.join(META_DIR, f"{base_uuid}.json")
     if not os.path.exists(meta_path):
         raise HTTPException(status_code=404, detail="Report not found")
-
     with open(meta_path, "r", encoding="utf-8") as mf:
         return json.load(mf)
 
-# 🧠 GPT 분석 보고서 요청
+
+# 🧠 GPT 분석 보고서 요청 (1~7번 섹션)
 class SectionRequest(BaseModel):
     sectionId: int
     metadata: dict
@@ -148,14 +154,6 @@ SECTION_PROMPTS = {
 
 ③ 취약점 우선순위 분류
 - Critical/High 등급 시각화""",
-    8: """① 분석 점수 및 위험도 요약
-- FileScan, Triage 점수
-
-② 탐지 룰 상세 분석
-- YARA 문자열 및 조건식
-
-③ 전체 로그 타임라인 구성
-- 시계열 정렬 및 필터 가능 구조"""
 }
 
 @app.post("/api/section")
@@ -167,40 +165,28 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
         4: "❹ MITRE ATT&CK 매핑",
         5: "❺ Artifacts 덤프 파일",
         6: "❻ 위협 흐름 및 목적 요약",
-        7: "❽ CWE 기반 권고",
-        8: "❾ 분석 JSON 요약",
+        7: "❼ CWE 기반 권고",
     }
 
     section_title = section_map.get(req.sectionId)
-    section_prompt = SECTION_PROMPTS.get(req.sectionId)
-
-    if not section_title or not section_prompt:
+    prompt_body   = SECTION_PROMPTS.get(req.sectionId)
+    if not section_title or not prompt_body:
         raise HTTPException(status_code=400, detail="Invalid sectionId")
 
     meta = req.metadata
     prompt = f"""
 당신은 악성코드 분석 전문가입니다.
 
-다음 샘플에 대한 분석 보고서를 작성해 주세요.  
-보고서는 아래 형식을 따르며, **정량적이고 정리된 항목 기반 보고서**처럼 구성해 주세요:
-
-- 각 항목은 '① 제목'으로 시작하고, 그 하위에 (1), (2), ... 형식으로 세부 내용을 나열합니다.
-- 문장은 '~로 판단됨', '~가 확인됨', '~로 보임'과 같은 분석 문체를 사용합니다.
-
 <분석 대상 개요>
-- 파일명: {meta.get("module", "")}  
-- 해시(SHA-256): {meta.get("sha256", "")}  
-- 형식: {meta.get("fileType", "")}  
-- 크기: {meta.get("fileSize", "")}  
+- 파일명: {meta.get("module", "")}
+- 해시(SHA-256): {meta.get("sha256", "")}
+- 형식: {meta.get("fileType", "")}
+- 크기: {meta.get("fileSize", "")}
 
 <요약 보고서 - {section_title}>
-
-다음 항목을 기준으로 보고서를 구성해 주세요:
-
-{section_prompt}
+{prompt_body}
 """
 
-    # GPT 응답
     try:
         resp = client.chat.completions.create(
             model="gpt-4o",
@@ -212,16 +198,73 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
-    # 섹션 3인 경우, Call Graph 생성 및 경로 포함
+    # 섹션 3(Call Graph)이면 graph 생성 경로 반환
     if req.sectionId == 3:
-        filename = meta.get("module","").rsplit(".",1)[0]
-        report_path = os.path.join(META_DIR, f"{filename}.json")
-        html_path = os.path.join(STATIC_DIR, f"{filename}.html")
-        try:
-            generate_call_graph(report_path, html_path)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"CallGraph 생성 실패: {e}")
-        return {"text": text, "callgraph_html": f"/static/callgraphs/{filename}.html"}
+        filename_base = meta.get("module", "").rsplit(".",1)[0]
+        return {
+            "text": text,
+            "callgraph_html": f"/static/callgraphs/{filename_base}.html"
+        }
 
     return {"text": text}
 
+
+# 🧠 CAPA 기반 자연어 분석 보고서 (8번)
+class CapaRequest(BaseModel):
+    sha256: str
+
+@app.post("/api/capa-report")
+def get_capa_report(req: CapaRequest = Body(...)):
+    base      = req.sha256
+    capa_path = os.path.join(CAPA_JSON_DIR, f"{base}.json")
+    if not os.path.exists(capa_path):
+        raise HTTPException(status_code=404, detail="CAPA 결과를 찾을 수 없습니다")
+    with open(capa_path, "r", encoding="utf-8") as f:
+        capa_json = json.load(f)
+
+    prompt = f"""
+아래는 CAPA 분석 도구가 출력한 JSON 결과입니다.
+다음 템플릿에 맞춰 한글 자연어 보고서를 작성해주세요.
+
+1. 개요
+   - 분석 대상 파일: {base}
+   - 분석 일시: {capa_json.get("timestamp", "알 수 없음")}
+   - CAPA 룰 버전: {capa_json.get("version", "알 수 없음")}
+
+2. 주요 매칭 룰 요약
+   - 룰 이름
+   - 룰 설명
+   - 매칭 위치
+   - 매칭된 특징
+   - 의미 및 악성 연관성
+
+3. 세부 분석
+{"".join([
+    f"- **{rule}**\n"
+    f"  - 매칭 위치: {', '.join([loc.get('function','') for loc in info.get('locations',[])])}\n"
+    f"  - 특징: {', '.join(info.get('features',[]))}\n"
+    f"  - 의미: {info.get('meaning','…')}\n\n"
+    for rule, info in capa_json.get("rules",{}).items()
+])}
+
+4. 종합 평가
+   - 주요 매칭 패턴 요약
+   - 악성 행위 유추 및 대응 방안
+   - 추가 조사 필요 지점
+"""
+
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role":"system", "content":"당신은 숙련된 악성코드 분석가입니다."},
+                {"role":"user",   "content":prompt}
+            ],
+            max_tokens=1024,
+            temperature=0.2
+        )
+        report = resp.choices[0].message.content.strip()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
+
+    return {"report": report}
