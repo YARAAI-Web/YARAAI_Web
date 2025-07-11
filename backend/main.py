@@ -1,5 +1,3 @@
-# backend/main.py
-
 from dotenv import load_dotenv
 import os
 import uuid
@@ -8,7 +6,7 @@ import subprocess
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from openai import OpenAI
 
@@ -69,7 +67,6 @@ async def upload_and_analyze(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 
     # 3) Jeongbin’s YARA 룰 자동 생성
-    #    임시로 분석 리포트를 저장하고 generate_yara_rule 호출
     tmp_meta = os.path.join(UPLOAD_DIR, f"{base_uuid}.json")
     with open(tmp_meta, "w", encoding="utf-8") as mf:
         json.dump(report, mf, ensure_ascii=False, indent=2)
@@ -99,13 +96,11 @@ async def upload_and_analyze(file: UploadFile = File(...)):
         report["suricata_rule"] = ""
 
     # 5) 결과 저장
-    # 5-1) 종합 메타 JSON (분석 결과 + yara_rule + suricata_rule)
     report["yara_rule"] = yara_txt
     meta_path = os.path.join(META_DIR, f"{base_uuid}.json")
     with open(meta_path, "w", encoding="utf-8") as mf:
         json.dump(report, mf, ensure_ascii=False, indent=2)
 
-    # 5-2) Suricata 룰만 별도 JSON
     suri_path = os.path.join(META_DIR, f"{base_uuid}_suricata.json")
     with open(suri_path, "w", encoding="utf-8") as sf:
         json.dump({"suricata_rule": report["suricata_rule"]}, sf, ensure_ascii=False, indent=2)
@@ -137,6 +132,19 @@ def get_report(filename: str):
     with open(meta_path, "r", encoding="utf-8") as mf:
         data = json.load(mf)
     return JSONResponse(content=data)
+
+
+# 🔄 History용 저장된 JSON 조회 엔드포인트 추가
+@app.get("/api/history/{file_id}")
+async def get_history(file_id: str):
+    """
+    History 페이지에서 클릭한 file_id에 해당하는
+    저장된 JSON 보고서를 그대로 내려줍니다.
+    """
+    json_path = os.path.join(META_DIR, f"{file_id}.json")
+    if not os.path.isfile(json_path):
+        raise HTTPException(status_code=404, detail=f"No history for {file_id}")
+    return FileResponse(json_path, media_type="application/json")
 
 
 # 🧠 GPT 분석 섹션 API (1~7)

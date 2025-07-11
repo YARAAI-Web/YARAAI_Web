@@ -1,7 +1,5 @@
-// src/pages/AnalysisPage.tsx
-
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import { saveAs } from 'file-saver'
 
@@ -41,6 +39,7 @@ const SECTIONS = [
 export default function AnalysisPage() {
   const { filename: rawFilename } = useParams<{ filename: string }>()
   const navigate = useNavigate()
+  const location = useLocation() as any
 
   const [filename, setFilename] = useState<string | null>(null)
   const [data, setData] = useState<AnalysisResult | null>(null)
@@ -62,47 +61,88 @@ export default function AnalysisPage() {
     setFilename(rawFilename)
   }, [rawFilename, navigate])
 
-  // 2) 메타 + GPT 섹션 호출
+  // 2) 메타 + GPT 섹션 호출 또는 캐시/History state 사용
   useEffect(() => {
     if (!filename) return
     setLoading(true)
+
+    // baseName, storage keys
+    const baseName = filename.replace(/\.[^.]+$/i, '')
+    const keySections = `yaraai_sections_${baseName}`
+    const keyMeta = `yaraai_meta_${baseName}`
+    const keyDate = `yaraai_date_${baseName}`
+
+    // 2-0) History state가 있으면 우선 사용
+    const histData: AnalysisResult | undefined = location.state?.data
+    const histSecs: string[] | undefined = location.state?.sections
+    const histDate: string | undefined = location.state?.date
+    if (histData && histSecs) {
+      setData(histData)
+      setAllTexts(histSecs)
+      setSubmissionDate(histDate || new Date().toLocaleString())
+      setLoading(false)
+      return
+    }
+
+    // 2-1) sessionStorage 캐시 확인
+    const savedSecs = sessionStorage.getItem(keySections)
+    const savedMeta = sessionStorage.getItem(keyMeta)
+    const savedDate = sessionStorage.getItem(keyDate)
+    if (savedSecs && savedMeta) {
+      setAllTexts(JSON.parse(savedSecs))
+      setData(JSON.parse(savedMeta))
+      setSubmissionDate(savedDate || new Date().toLocaleString())
+      setLoading(false)
+      return
+    }
+
+    // 2-2) 캐시 없으면 서버에서 메타 + GPT 섹션 호출
+    let fetchedMeta: AnalysisResult
+    let nowStr = new Date().toLocaleString()
     axios
       .get<AnalysisResult>(`/reports/${filename}`)
       .then((res) => {
+        fetchedMeta = res.data
         setData(res.data)
-        setSubmissionDate(new Date().toLocaleString())
+        nowStr = new Date().toLocaleString()
+        setSubmissionDate(nowStr)
 
-        SECTIONS.forEach((_, idx) => {
-          if (idx === 2) return // Call Graph 섹션은 스킵
-          axios
-            .post<{ text: string }>('/api/section', {
-              sectionId: idx + 1,
-              metadata: {
-                module: res.data.get_metadata.module,
-                sha256: res.data.get_metadata.sha256,
-                fileType: res.data.get_metadata.format || '',
-                fileSize: res.data.get_metadata.filesize || '',
-              },
-            })
-            .then((r) => {
-              setAllTexts((prev) => {
-                const copy = [...prev]
-                copy[idx] = r.data.text
-                return copy
+        // Promise.all 로 7개 섹션 비동기 호출
+        return Promise.all(
+          SECTIONS.map((_, idx) => {
+            if (idx === 2) {
+              // Call Graph 섹션은 HTML iframe로 대체
+              return Promise.resolve('(Call Graph)')
+            }
+            return axios
+              .post<{ text: string }>('/api/section', {
+                sectionId: idx + 1,
+                metadata: {
+                  module: res.data.get_metadata.module,
+                  sha256: res.data.get_metadata.sha256,
+                  fileType: res.data.get_metadata.format || '',
+                  fileSize: res.data.get_metadata.filesize || '',
+                },
               })
-            })
-            .catch(() => {
-              setAllTexts((prev) => {
-                const copy = [...prev]
-                copy[idx] = '(불러오기 실패)'
-                return copy
-              })
-            })
-        })
+              .then((r) => r.data.text)
+              .catch(() => '(불러오기 실패)')
+          })
+        )
       })
-      .catch((err) => setError(err.response?.data?.detail || err.message))
-      .finally(() => setLoading(false))
-  }, [filename])
+      .then((texts) => {
+        setAllTexts(texts)
+        // 2-3) 호출 완료 후 세션 스토리지에 저장
+        sessionStorage.setItem(keySections, JSON.stringify(texts))
+        sessionStorage.setItem(keyMeta, JSON.stringify(fetchedMeta))
+        sessionStorage.setItem(keyDate, nowStr)
+      })
+      .catch((err) => {
+        setError(err.response?.data?.detail || err.message)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [filename, location.state])
 
   // 로딩/에러/없음 처리
   if (loading) return <div className="p-8 text-center">로딩 중…</div>
@@ -110,10 +150,9 @@ export default function AnalysisPage() {
   if (!data || !filename)
     return <div className="p-8">분석 결과를 찾을 수 없습니다.</div>
 
-  // filename 이 null 아님이 보장된 시점
   const baseName = filename.replace(/\.[^.]+$/i, '')
 
-  // JSON 다운로드
+  // ▼ 다운로드 함수들
   const downloadJSON = () => {
     const {
       get_metadata,
@@ -144,33 +183,12 @@ export default function AnalysisPage() {
     })
     saveAs(blob, `${baseName}.json`)
   }
-
-  // HTML 다운로드
   const downloadHTML = () => {
     if (!htmlRef.current) return
-    const html = `<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <title>보고서 - ${baseName}</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .header { border:2px solid #000; padding:10px; display:flex; justify-content:space-between; margin-bottom:20px; }
-    h2 { color:#0F3ADA; margin-top:30px; }
-    .section { margin-bottom: 20px; }
-    .iframe-container { border:1px solid #ccc; height:500px; }
-    pre { white-space: pre-wrap; }
-  </style>
-</head>
-<body>
-  ${htmlRef.current.innerHTML}
-</body>
-</html>`
+    const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><title>보고서 - ${baseName}</title><style>body{font-family:sans-serif;padding:20px}.header{border:2px solid #000;padding:10px;display:flex;justify-content:space-between;margin-bottom:20px}h2{color:#0F3ADA;margin-top:30px}.section{margin-bottom:20px}.iframe-container{border:1px solid #ccc;height:500px}pre{white-space:pre-wrap}</style></head><body>${htmlRef.current.innerHTML}</body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     saveAs(blob, `${baseName}.html`)
   }
-
-  // Suricata JSON 다운로드
   const downloadSuricataJSON = () => {
     const url = `/meta_json/${baseName}_suricata.json`
     const a = document.createElement('a')
@@ -219,7 +237,7 @@ export default function AnalysisPage() {
       <div className="flex flex-col min-h-screen bg-white">
         <div className="px-8 pt-8 pb-2">
           <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-4 justify-between items-start">
-            <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md h-full">
+            <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md">
               Likely Malicious
             </div>
             <div className="flex-1 pl-6 space-y-2">
