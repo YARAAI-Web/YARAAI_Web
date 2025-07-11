@@ -4,15 +4,17 @@ from dotenv import load_dotenv
 import os
 import uuid
 import json
-
+import subprocess
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from openai import OpenAI
 
 from services.analysis import analyze_file
 from generate_callgraph import generate_call_graph
+from services.suricata.yara_generator import generate_yara_rule
 
 # 🔐 환경 변수 로드
 load_dotenv()
@@ -40,12 +42,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 정적 파일 서빙
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/meta_json", StaticFiles(directory=META_DIR), name="meta_json")
 
 
-# 📤 파일 업로드 API
+# 📤 파일 업로드 + 분석 + 룰 생성 파이프라인
 @app.post("/upload")
 async def upload_and_analyze(file: UploadFile = File(...)):
+    # 1) 파일 저장
     ext = file.filename.rsplit(".", 1)[-1].lower()
     if ext not in ("exe", "dll"):
         raise HTTPException(status_code=400, detail="Unsupported file type")
@@ -55,19 +60,58 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     data = await file.read()
     with open(dest_path, "wb") as f:
         f.write(data)
+    base_uuid = os.path.splitext(unique_name)[0]
 
+    # 2) 정적/동적 분석
     try:
         report = analyze_file(dest_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 
-    base_uuid = os.path.splitext(unique_name)[0]
+    # 3) Jeongbin’s YARA 룰 자동 생성
+    #    임시로 분석 리포트를 저장하고 generate_yara_rule 호출
+    tmp_meta = os.path.join(UPLOAD_DIR, f"{base_uuid}.json")
+    with open(tmp_meta, "w", encoding="utf-8") as mf:
+        json.dump(report, mf, ensure_ascii=False, indent=2)
+
+    try:
+        yara_txt = generate_yara_rule(tmp_meta)
+    except Exception:
+        yara_txt = ""
+
+    # 4) Suricata 룰 변환 (YARA → Suricata)
+    tmp_yar = os.path.join(UPLOAD_DIR, f"{base_uuid}.yar")
+    with open(tmp_yar, "w", encoding="utf-8") as yf:
+        yf.write(yara_txt)
+
+    script = os.path.join(BASE_DIR, "services", "suricata", "run_convert.py")
+    try:
+        proc = subprocess.run(
+            ["python3", script, tmp_yar],
+            cwd=os.path.join(BASE_DIR, "services", "suricata"),
+            capture_output=True, text=True, check=True
+        )
+        lines = proc.stdout.splitlines()
+        if lines and not lines[0].startswith("alert"):
+            lines = lines[1:]
+        report["suricata_rule"] = "\n".join(lines)
+    except subprocess.CalledProcessError:
+        report["suricata_rule"] = ""
+
+    # 5) 결과 저장
+    # 5-1) 종합 메타 JSON (분석 결과 + yara_rule + suricata_rule)
+    report["yara_rule"] = yara_txt
     meta_path = os.path.join(META_DIR, f"{base_uuid}.json")
-    html_path = os.path.join(STATIC_DIR, f"{base_uuid}.html")
-    
     with open(meta_path, "w", encoding="utf-8") as mf:
         json.dump(report, mf, ensure_ascii=False, indent=2)
-    
+
+    # 5-2) Suricata 룰만 별도 JSON
+    suri_path = os.path.join(META_DIR, f"{base_uuid}_suricata.json")
+    with open(suri_path, "w", encoding="utf-8") as sf:
+        json.dump({"suricata_rule": report["suricata_rule"]}, sf, ensure_ascii=False, indent=2)
+
+    # 6) CallGraph HTML 생성
+    html_path = os.path.join(STATIC_DIR, f"{base_uuid}.html")
     try:
         generate_call_graph(meta_path, html_path)
     except Exception as e:
@@ -79,14 +123,11 @@ async def upload_and_analyze(file: UploadFile = File(...)):
 # 📋 리포트 목록 조회
 @app.get("/reports")
 def list_reports():
-    files = [
-        f for f in os.listdir(UPLOAD_DIR)
-        if os.path.isfile(os.path.join(UPLOAD_DIR, f))
-    ]
-    return {"reports": files}
+    files = [f for f in os.listdir(UPLOAD_DIR) if os.path.isfile(os.path.join(UPLOAD_DIR, f))]
+    return JSONResponse(content={"reports": files})
 
 
-# 📄 특정 리포트 조회
+# 📄 특정 리포트 조회 (yara_rule, suricata_rule 포함)
 @app.get("/reports/{filename}")
 def get_report(filename: str):
     base_uuid = os.path.splitext(filename)[0]
@@ -94,10 +135,11 @@ def get_report(filename: str):
     if not os.path.exists(meta_path):
         raise HTTPException(status_code=404, detail="Report not found")
     with open(meta_path, "r", encoding="utf-8") as mf:
-        return json.load(mf)
+        data = json.load(mf)
+    return JSONResponse(content=data)
 
 
-# 🧠 GPT 분석 보고서 요청 (1~7번 섹션)
+# 🧠 GPT 분석 섹션 API (1~7)
 class SectionRequest(BaseModel):
     sectionId: int
     metadata: dict
@@ -109,7 +151,7 @@ SECTION_PROMPTS = {
 
 ② 문자열 분석
 - 악성 키워드 주제별 정리 (예: powershell, reg add 등)
-- URL, 도메인, IP 주소는 별도 정리
+- URL, 도메인, IP 주소 정리
 
 ③ YARA 룰 매칭 분석
 - 룰 이름, 조건식, 탐지 문자열 정리
@@ -167,7 +209,6 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
         6: "❻ 위협 흐름 및 목적 요약",
         7: "❼ CWE 기반 권고",
     }
-
     section_title = section_map.get(req.sectionId)
     prompt_body   = SECTION_PROMPTS.get(req.sectionId)
     if not section_title or not prompt_body:
@@ -175,22 +216,21 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 
     meta = req.metadata
     prompt = f"""
-당신은 악성코드 분석 전문가입니다.
+당신은 악성코드 분석 전문가입니다。
 
 <분석 대상 개요>
-- 파일명: {meta.get("module", "")}
-- 해시(SHA-256): {meta.get("sha256", "")}
-- 형식: {meta.get("fileType", "")}
-- 크기: {meta.get("fileSize", "")}
+- 파일명: {meta.get("module","")}
+- 해시(SHA-256): {meta.get("sha256","")}
+- 형식: {meta.get("fileType","")}
+- 크기: {meta.get("fileSize","")}
 
 <요약 보고서 - {section_title}>
 {prompt_body}
 """
-
     try:
         resp = client.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role":"user","content":prompt}],
             max_tokens=1024,
             temperature=0.7
         )
@@ -198,18 +238,16 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
-    # 섹션 3(Call Graph)이면 graph 생성 경로 반환
     if req.sectionId == 3:
-        filename_base = meta.get("module", "").rsplit(".",1)[0]
-        return {
+        filename_base = meta.get("module","").rsplit(".",1)[0]
+        return JSONResponse(content={
             "text": text,
             "callgraph_html": f"/static/callgraphs/{filename_base}.html"
-        }
+        })
+    return JSONResponse(content={"text": text})
 
-    return {"text": text}
 
-
-# 🧠 CAPA 기반 자연어 분석 보고서 (8번)
+# 🧠 CAPA 기반 자연어 분석 보고서 (8)
 class CapaRequest(BaseModel):
     sha256: str
 
@@ -223,42 +261,16 @@ def get_capa_report(req: CapaRequest = Body(...)):
         capa_json = json.load(f)
 
     prompt = f"""
-아래는 CAPA 분석 도구가 출력한 JSON 결과입니다.
-다음 템플릿에 맞춰 한글 자연어 보고서를 작성해주세요.
-
-1. 개요
-   - 분석 대상 파일: {base}
-   - 분석 일시: {capa_json.get("timestamp", "알 수 없음")}
-   - CAPA 룰 버전: {capa_json.get("version", "알 수 없음")}
-
-2. 주요 매칭 룰 요약
-   - 룰 이름
-   - 룰 설명
-   - 매칭 위치
-   - 매칭된 특징
-   - 의미 및 악성 연관성
-
-3. 세부 분석
-{"".join([
-    f"- **{rule}**\n"
-    f"  - 매칭 위치: {', '.join([loc.get('function','') for loc in info.get('locations',[])])}\n"
-    f"  - 특징: {', '.join(info.get('features',[]))}\n"
-    f"  - 의미: {info.get('meaning','…')}\n\n"
-    for rule, info in capa_json.get("rules",{}).items()
-])}
-
-4. 종합 평가
-   - 주요 매칭 패턴 요약
-   - 악성 행위 유추 및 대응 방안
-   - 추가 조사 필요 지점
+아래는 CAPA 분석 도구가 출력한 JSON 결과입니다。
+다음 템플릿에 맞춰 한글 자연어 보고서를 작성해주세요。
+...
 """
-
     try:
         resp = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role":"system", "content":"당신은 숙련된 악성코드 분석가입니다."},
-                {"role":"user",   "content":prompt}
+                {"role":"system","content":"당신은 숙련된 악성코드 분석가입니다。"},
+                {"role":"user","content":prompt}
             ],
             max_tokens=1024,
             temperature=0.2
@@ -267,4 +279,4 @@ def get_capa_report(req: CapaRequest = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
-    return {"report": report}
+    return JSONResponse(content={"report": report})

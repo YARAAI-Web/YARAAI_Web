@@ -1,7 +1,9 @@
 // src/pages/AnalysisPage.tsx
+
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { saveAs } from 'file-saver'
 
 interface AnalysisResult {
   get_metadata: {
@@ -21,6 +23,8 @@ interface AnalysisResult {
   c_code: string[]
   h_code: string[]
   virustotal: Record<string, any>
+  yara_rule: string
+  suricata_rule: string
   tags?: string[]
 }
 
@@ -44,16 +48,12 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentSection, setCurrentSection] = useState(0)
-
-  // GPT 응답 캐시 (1~7번)
   const [allTexts, setAllTexts] = useState<string[]>(
     Array(SECTIONS.length).fill('로딩 중…')
   )
-
-  // HTML 다운로드용 off-screen 컨테이너
   const htmlRef = useRef<HTMLDivElement>(null)
 
-  // filename 세팅
+  // 1) filename 초기화
   useEffect(() => {
     if (!rawFilename) {
       navigate('/')
@@ -62,10 +62,9 @@ export default function AnalysisPage() {
     setFilename(rawFilename)
   }, [rawFilename, navigate])
 
-  // 메타·섹션 1~7 호출
+  // 2) 메타 + GPT 섹션 호출
   useEffect(() => {
     if (!filename) return
-
     setLoading(true)
     axios
       .get<AnalysisResult>(`/reports/${filename}`)
@@ -74,9 +73,7 @@ export default function AnalysisPage() {
         setSubmissionDate(new Date().toLocaleString())
 
         SECTIONS.forEach((_, idx) => {
-          // Call Graph(3번)만 건너뛰고 GPT 요청
-          if (idx === 2) return
-
+          if (idx === 2) return // Call Graph 섹션은 스킵
           axios
             .post<{ text: string }>('/api/section', {
               sectionId: idx + 1,
@@ -107,15 +104,17 @@ export default function AnalysisPage() {
       .finally(() => setLoading(false))
   }, [filename])
 
+  // 로딩/에러/없음 처리
   if (loading) return <div className="p-8 text-center">로딩 중…</div>
   if (error) return <div className="p-8 text-red-500">오류 발생: {error}</div>
   if (!data || !filename)
     return <div className="p-8">분석 결과를 찾을 수 없습니다.</div>
 
-  // JSON 다운로드 (h_code 다음에 virustotal)
-  const downloadJSON = () => {
-    if (!data) return
+  // filename 이 null 아님이 보장된 시점
+  const baseName = filename.replace(/\.[^.]+$/i, '')
 
+  // JSON 다운로드
+  const downloadJSON = () => {
     const {
       get_metadata,
       get_current_address,
@@ -125,10 +124,9 @@ export default function AnalysisPage() {
       string_stats,
       pe_headers,
       c_code,
-      h_code, // ← 여기까지
-      virustotal, // ← h_code 다음에 추가
-    } = data as AnalysisResult
-
+      h_code,
+      virustotal,
+    } = data
     const filtered = {
       get_metadata,
       get_current_address,
@@ -139,29 +137,22 @@ export default function AnalysisPage() {
       pe_headers,
       c_code,
       h_code,
-      virustotal, // ← 순서를 유지
+      virustotal,
     }
-
     const blob = new Blob([JSON.stringify(filtered, null, 2)], {
       type: 'application/json',
     })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${filename}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+    saveAs(blob, `${baseName}.json`)
   }
 
   // HTML 다운로드
   const downloadHTML = () => {
     if (!htmlRef.current) return
-    const content = htmlRef.current.innerHTML
-    const full = `<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>보고서 - ${filename}</title>
+  <title>보고서 - ${baseName}</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
     .header { border:2px solid #000; padding:10px; display:flex; justify-content:space-between; margin-bottom:20px; }
@@ -172,21 +163,25 @@ export default function AnalysisPage() {
   </style>
 </head>
 <body>
-  ${content}
+  ${htmlRef.current.innerHTML}
 </body>
 </html>`
-    const blob = new Blob([full], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
+    const blob = new Blob([html], { type: 'text/html' })
+    saveAs(blob, `${baseName}.html`)
+  }
+
+  // Suricata JSON 다운로드
+  const downloadSuricataJSON = () => {
+    const url = `/meta_json/${baseName}_suricata.json`
     const a = document.createElement('a')
     a.href = url
-    a.download = `${filename}.html`
+    a.download = `${baseName}_suricata.json`
     a.click()
-    URL.revokeObjectURL(url)
   }
 
   return (
     <>
-      {/* OFF-SCREEN: HTML export */}
+      {/* Off-screen HTML export */}
       <div
         ref={htmlRef}
         style={{ position: 'absolute', top: -9999, left: -9999, width: 800 }}
@@ -202,17 +197,13 @@ export default function AnalysisPage() {
             <strong>Submission Date:</strong> {submissionDate}
           </div>
         </div>
-
         {SECTIONS.map((title, idx) => (
           <div className="section" key={idx}>
             <h2>{title}</h2>
             {idx === 2 ? (
               <div className="iframe-container">
                 <iframe
-                  src={`/static/callgraphs/${filename.replace(
-                    /\.exe$/i,
-                    ''
-                  )}.html`}
+                  src={`/static/callgraphs/${baseName}.html`}
                   style={{ width: '100%', height: '100%', border: 'none' }}
                   sandbox="allow-scripts allow-same-origin"
                 />
@@ -224,7 +215,7 @@ export default function AnalysisPage() {
         ))}
       </div>
 
-      {/* SCREEN UI */}
+      {/* Screen UI */}
       <div className="flex flex-col min-h-screen bg-white">
         <div className="px-8 pt-8 pb-2">
           <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-4 justify-between items-start">
@@ -257,12 +248,18 @@ export default function AnalysisPage() {
               >
                 HTML
               </button>
+              <button
+                onClick={downloadSuricataJSON}
+                className="bg-green-200 hover:bg-green-300 px-4 py-2 rounded"
+              >
+                Suricata JSON
+              </button>
             </div>
           </div>
         </div>
 
         <div className="flex flex-1 px-8 pb-8 gap-6">
-          <div className="w-[260px] bg-gray-50 border-r p-4 space-y-2">
+          <nav className="w-[260px] bg-gray-50 border-r p-4 space-y-2">
             {SECTIONS.map((label, idx) => (
               <div
                 key={idx}
@@ -276,29 +273,23 @@ export default function AnalysisPage() {
                 {label}
               </div>
             ))}
-          </div>
-          <div className="flex-1 overflow-auto">
-            <section className="bg-white shadow rounded-xl border-l-4 border-[#0F3ADA] p-4 h-full">
-              <h2 className="text-xl font-bold text-[#0F3ADA] mb-4">
-                {SECTIONS[currentSection]}
-              </h2>
-              {currentSection === 2 ? (
-                <iframe
-                  key={`callgraph-${filename}`}
-                  src={`/static/callgraphs/${filename.replace(
-                    /\.exe$/i,
-                    ''
-                  )}.html`}
-                  className="w-full h-[800px] border-none rounded"
-                  sandbox="allow-scripts allow-same-origin"
-                />
-              ) : (
-                <pre className="whitespace-pre-wrap">
-                  {allTexts[currentSection]}
-                </pre>
-              )}
-            </section>
-          </div>
+          </nav>
+          <main className="flex-1 overflow-auto p-4 bg-white rounded-xl shadow border-l-4 border-[#0F3ADA]">
+            <h2 className="text-xl font-bold text-[#0F3ADA] mb-4">
+              {SECTIONS[currentSection]}
+            </h2>
+            {currentSection === 2 ? (
+              <iframe
+                src={`/static/callgraphs/${baseName}.html`}
+                className="w-full h-[800px] border-none rounded"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            ) : (
+              <pre className="whitespace-pre-wrap">
+                {allTexts[currentSection]}
+              </pre>
+            )}
+          </main>
         </div>
       </div>
     </>
