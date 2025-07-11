@@ -12,6 +12,15 @@ interface AnalysisResult {
     format?: string
     filesize?: string
   }
+  get_current_address: string
+  get_current_function: Record<string, any>
+  get_entry_points: any[]
+  file_entropy: number
+  string_stats: Record<string, any>
+  pe_headers: Record<string, any>
+  c_code: string[]
+  h_code: string[]
+  virustotal: Record<string, any>
   tags?: string[]
 }
 
@@ -103,9 +112,37 @@ export default function AnalysisPage() {
   if (!data || !filename)
     return <div className="p-8">분석 결과를 찾을 수 없습니다.</div>
 
-  // JSON 다운로드
+  // JSON 다운로드 (h_code 다음에 virustotal)
   const downloadJSON = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
+    if (!data) return
+
+    const {
+      get_metadata,
+      get_current_address,
+      get_current_function,
+      get_entry_points,
+      file_entropy,
+      string_stats,
+      pe_headers,
+      c_code,
+      h_code, // ← 여기까지
+      virustotal, // ← h_code 다음에 추가
+    } = data as AnalysisResult
+
+    const filtered = {
+      get_metadata,
+      get_current_address,
+      get_current_function,
+      get_entry_points,
+      file_entropy,
+      string_stats,
+      pe_headers,
+      c_code,
+      h_code,
+      virustotal, // ← 순서를 유지
+    }
+
+    const blob = new Blob([JSON.stringify(filtered, null, 2)], {
       type: 'application/json',
     })
     const url = URL.createObjectURL(blob)
