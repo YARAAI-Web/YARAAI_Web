@@ -1,4 +1,4 @@
-// AnalysisPage.tsx
+// src/pages/AnalysisPage.tsx
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
@@ -88,20 +88,31 @@ export default function AnalysisPage() {
     const savedSecs = sessionStorage.getItem(keySections)
     const savedDate = sessionStorage.getItem(keyDate)
     if (savedSecs) {
+      // 1) 섹션 텍스트와 제출일 바로 로드
       setAllTexts(JSON.parse(savedSecs))
-      // 메타는 캐시하지 않으므로 data는 새로 fetch하게 됩니다
       setSubmissionDate(savedDate || new Date().toLocaleString())
-      setLoading(false)
+
+      // 2) 메타데이터도 서버에서 다시 fetch
+      axios
+        .get<AnalysisResult>(`/reports/${filename}`)
+        .then((res) => {
+          setData(res.data)
+        })
+        .catch((err) => {
+          setError(err.response?.data?.detail || err.message)
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+
       return
     }
 
     // 2-2) 캐시 없으면 서버에서 메타 + GPT 섹션 호출
-    let fetchedMeta: AnalysisResult
     let nowStr = new Date().toLocaleString()
     axios
       .get<AnalysisResult>(`/reports/${filename}`)
       .then((res) => {
-        fetchedMeta = res.data
         setData(res.data)
         nowStr = new Date().toLocaleString()
         setSubmissionDate(nowStr)
@@ -213,10 +224,10 @@ export default function AnalysisPage() {
             <h2>{title}</h2>
             {idx === 2 ? (
               <div className="iframe-container">
-                  <iframe 
-                    src={`http://localhost:8000/static/callgraphs/${baseName}.html`} 
-                    style={{ width: '100%', height: '100%', border: 'none' }} 
-                  />
+                <iframe
+                  src={`http://localhost:8000/static/callgraphs/${baseName}.html`}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                />
               </div>
             ) : (
               <pre>{allTexts[idx]}</pre>

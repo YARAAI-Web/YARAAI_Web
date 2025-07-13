@@ -83,7 +83,7 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     
     # 2) 정적/동적 분석
     try:
-        report = analyze_file(dest_path)
+        report = analyze_file(analyze_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 
