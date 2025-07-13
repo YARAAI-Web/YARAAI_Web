@@ -100,7 +100,7 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
         "yara_rules":           yara_rules,
         "capa_rules":           capa_rules,
 
-        "MITRE ATT&CK":         mitre_mapping,
+        "MITRE":         mitre_mapping,
         "CWE":                  CWE
     }
 
