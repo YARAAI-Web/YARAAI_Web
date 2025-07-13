@@ -26,17 +26,28 @@ def run_capa(sample, tmp_dir, rules_dir, sigs_dir):
     return out_json
 
 def extract_attack_ids(json_path):
-    data = json.load(open(json_path, encoding='utf-8'))
-    ids = set()
-    for rule in (data.get('rules') or {}).values():
+    # JSON 파일 로드
+    with open(json_path, encoding='utf-8') as f:
+        data = json.load(f)
+
+    # (tid, technique, tactic) 삼중 리스트 수집
+    ids = []
+    for rule in data.get('rules', {}).values():
         for attack in rule.get('meta', {}).get('attack', []):
             if isinstance(attack, dict):
                 tid = attack.get('id') or attack.get('ID')
-                if tid:
-                    ids.add(tid)
+                if not tid:
+                    continue
+                tech = attack.get('technique') or ''
+                tac  = attack.get('tactic')    or ''
+                ids.append([tid, tech, tac])
             elif isinstance(attack, str):
-                ids.add(attack)
-    return sorted(ids)
+                # 문자열만 있는 경우에도 ID로 추가
+                ids.append([attack, '', ''])
+
+    # 중복 제거: 리스트 → 튜플 → set → 다시 리스트로
+    unique = set(tuple(x) for x in ids)
+    return [list(x) for x in unique]
 
 def map_mitre(sample):
     tmp_dir = os.path.abspath(r'services\CAPA\capa_json')
