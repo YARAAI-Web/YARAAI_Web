@@ -1,4 +1,4 @@
-#include "21f44473-d6fd-48dd-87a6-ea81ed8c4204.h"
+#include "8b3cb907-3f52-470c-9845-1ddd74c05eb8.h"
 
 HRESULT __stdcall StringCchCopyA(STRSAFE_LPSTR pszDest, size_t cchDest, STRSAFE_LPCSTR pszSrc)
 {

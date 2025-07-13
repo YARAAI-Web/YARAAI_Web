@@ -94,8 +94,10 @@ async def upload_and_analyze(file: UploadFile = File(...)):
 
     try:
         yara_txt = generate_yara_rule(tmp_meta)
+        print("YARA rule generation successful")
     except Exception:
         yara_txt = ""
+        print("YARA rule generation failed, using empty rule.") 
 
     # 4) Suricata 룰 변환 (YARA → Suricata)
     tmp_yar = os.path.join(UPLOAD_DIR, f"{base_uuid}.yar")
@@ -113,8 +115,10 @@ async def upload_and_analyze(file: UploadFile = File(...)):
         if lines and not lines[0].startswith("alert"):
             lines = lines[1:]
         report["suricata_rule"] = "\n".join(lines)
+        print("Suricata rule conversion successful")
     except subprocess.CalledProcessError:
         report["suricata_rule"] = ""
+        print("Suricata rule conversion failed, using empty rule.")
 
     # 5) 결과 저장
     report["yara_rule"] = yara_txt
@@ -182,68 +186,42 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     with open(meta_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     section_map = {
-        1: "❶ 정적 분석 결과 구조",
-        2: "❷ 동적 분석 결과 (프로세스 및 레지스트리)",
-        3: "❸ Call Graph",
-        4: "❹ MITRE ATT&CK 매핑",
-        5: "❺ Artifacts 덤프 파일",
-        6: "❻ 위협 흐름 및 목적 요약",
-        7: "❼ CWE 기반 권고",
+        1: "❶ 요약",
+        2: "❷ 정적 분석",
+        3: "❸ 동적 분석",
+        4: "❹ 인터랙티브 그래프(call graph)",
+        5: "❺ MITRE ATT&CK 매핑",
+        6: "❻  CWE 기반 보안 권고",
     }
     SECTION_PROMPTS = {
-    1: f"""① 패킹 또는 암호화 기법 사용 여부
-- Entropy 분석 및 패커 명칭 확인
-- .text 섹션 해시 제공
+    1: f"""① 요약
+    - 과정 설명 간단하게(1~2문장) + 악성코드가 발생함으로써 생기는 결과(결론적으로~): 목적…""",
+    2: f"""(0) 파일 크기, 포맷(EXE랑 dll 구분. PE header로)
 
-② 문자열 분석
-- 악성 키워드 주제별 정리 (예: powershell, reg add 등)
-- URL, 도메인, IP 주소 정리
+(1) 해당 악성코드 파일에서 패킹이 사용되었는지 분석
 
-③ YARA 룰 매칭 분석
-- 룰 이름, 조건식, 탐지 문자열 정리
-- 커버리지 평가""",
-    2: f"""① 프로세스 행위 분석
-- cmd.exe → powershell.exe → svchost.exe 흐름 여부
-- 타임라인 기반 정렬 및 자식 PID 기록
-- Process Hollowing 여부
+- 섹션 기반 패킹 여부 확인
+- 사용된 패커 이름(예: UPX, Themida) 제공
 
-② 레지스트리 조작 분석
-- Run 키, Task Scheduler, 서비스 등록 여부""",
-    3: f"""① 함수 호출 흐름 시각화
-- 주요 함수 중심 노드/엣지 구조 정리
-- 기능 단위로 군집화
-- 루트 함수 강조 및 전체 노드/엣지 수 요약""",
-    4: f"""① MITRE ATT&CK 기술 매핑
-- 탐지된 행위별 TTP 코드 연결
-{data['MITRE']}
+(2) Import 함수 목록
 
-② 근거 제공
-- 명령어, 로그 등 증거 기반 설명
+- (.idata 섹션에서 추가 추출)
 
-③ 시나리오 정리
-- 공격 흐름을 시간 순으로 구성""",
-    5: f"""① 생성 파일 덤프 요약
-- 경로, 해시, 권한, 타임스탬프
+(3) YARA 룰 매칭 결과를 분석(보류-서웅이의 결과 나오고)
 
-② 시스템 로그 분석
-- 실행 시점, 파일 경로, 행위 요약""",
-    6: f"""① 위협 흐름 정리
-- 자식 프로세스 생성 → 설정 변경 → 외부 통신 구조
-
-② 공격 목적 유추
-- 정보 탈취 vs 지속성 확보
-
-③ 유사 샘플 비교
-- 탐지된 룰 또는 행동 기반 비교""",
-    7: f"""① CWE ID 매핑
-- 탐지된 행위별 CWE 코드
-{data['CWE']}
-
-② 대응책 제시
-- 기술적 보안 권고사항 요약
-
-③ 취약점 우선순위 분류
-- Critical/High 등급 시각화""",
+- 룰 이름, 조건식, meta 정보, 탐지 문자열 전체 리스트 제공
+- 룰 커버리지 수준도 평가""",
+    3: f"""- 악성코드 실행 시 어떤 프로세스가 생성되었는지
+- 어떤 레지스트리 키가 조작되었는지
+- 파일이 생성/변경/삭제되었는지 등 시스템 상의 행위(Event)를 기록
+- 시스템 로그(실행 시점, 경로, 행위 등)를 정리""",
+    4: f"""callgraph.html 파일을 생성하여
+- 함수 호출 관계를 시각적으로 표현""",
+    5: f"""(1) 각 기술에 대응하는 로그나 명령어 근거를 제공 ⇒ capa로? 
+(2) CAPA 클러스터링으로 악성코드 분류 후 설명 제공
+{data['MITRE']}""",
+    6: f"""(1) 탐지된 행위별로 해당하는 CWE ID를 매핑한 후 각 CWE에 대한 설명과 저 1000.csv 에 어떤 기준으로 매핑한 건지 자연어 처리 
+{data['CWE']}""",
 }
     section_title = section_map.get(req.sectionId)
     prompt_body   = SECTION_PROMPTS.get(req.sectionId)
@@ -252,9 +230,16 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 
     meta = data['get_metadata']
     prompt = f"""
-당신은 악성코드 분석 전문가입니다。한글로 아래의 요구사항을 해결해주세요。
-Make sure to think step-by-step when answering
-출력은 반드시 **마크다운 형식 없이**, 일반 텍스트만 사용하여 작성해주세요.
+당신은 악성코드 분석 전문가입니다. 한글로 아래의 요구사항을 해결해주세요. 
+출력은 반드시 **마크다운 형식 없이**, 일반 텍스트만 사용하여 작성해주세요. 
+제공한 정보 이외의 내용들을 출력하지 마세요. Make sure to think step-by-step when answering. 
+
+악성코드 분석가들이 악성코드를 정적/동적 분석 툴을 사용하지 않고 악성코드에 대한 전반적인 정보를 얻을 수 있게 해주세요.
+
+정확하고 명료한 문장으로 잘 풀어써주세요
+표준 용어(IOC, TTP, MITRE ATT&CK) 사용해주세요
+
+객관적이고 중립적인 어조를 사용해주세요
 
 <분석 대상 개요>
 - 파일명: {meta.get("module","")}
@@ -267,7 +252,7 @@ Make sure to think step-by-step when answering
 """
     try:
         resp = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-3.5-turbo",
             messages=[{"role":"user","content":prompt}],
             max_tokens=1024,
             temperature=0.7
@@ -276,7 +261,7 @@ Make sure to think step-by-step when answering
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
-    if req.sectionId == 3:
+    if req.sectionId == 4:
         filename_base = meta.get("module","").rsplit(".",1)[0]
         return JSONResponse(content={
             "text": text,
