@@ -1,4 +1,3 @@
-// src/pages/AnalysisPage.tsx
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
@@ -30,7 +29,7 @@ interface AnalysisResult {
 const SECTIONS = [
   '❶ 정적 분석 결과파일 구조',
   '❷ 동적 분석 결과 프로세스 행위',
-  '❸ Call Graph → 인터랙티브 그래프',
+  '❸ 인터랙티브 그래프(Call Graph)',
   '❹ MITRE ATT&CK 매핑 / ATT&CK ID기법',
   '❺ Artifacts 덤프 파일',
   '❻ 인사이트/위협 및 위험 요약',
@@ -53,7 +52,6 @@ export default function AnalysisPage() {
   )
   const htmlRef = useRef<HTMLDivElement>(null)
 
-  // 1) filename 초기화
   useEffect(() => {
     if (!rawFilename) {
       navigate('/')
@@ -62,7 +60,6 @@ export default function AnalysisPage() {
     setFilename(rawFilename)
   }, [rawFilename, navigate])
 
-  // 2) 데이터 fetch / 캐시 / 히스토리 로직
   useEffect(() => {
     if (!filename) return
     setLoading(true)
@@ -163,12 +160,20 @@ export default function AnalysisPage() {
     })
     saveAs(blob, `${baseName}.json`)
   }
+
   const downloadHTML = () => {
     if (!htmlRef.current) return
-    const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><title>보고서 - ${baseName}</title><style>body{font-family:sans-serif;padding:20px}.header{border:2px solid #000;padding:10px;display:flex;justify-content:space-between;margin-bottom:20px}h2{color:#0F3ADA;margin-top:30px}.section{margin-bottom:20px}.iframe-container{border:1px solid #ccc;height:500px}pre{white-space:pre-wrap}</style></head><body>${htmlRef.current.innerHTML}</body></html>`
+    const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><title>보고서 - ${baseName}</title><style>
+      body{font-family:sans-serif;padding:20px}
+      .header{border:2px solid #000;padding:10px;margin-bottom:20px}
+      h2{color:#0F3ADA;margin-top:30px}
+      pre{white-space:pre-wrap}
+      .iframe-container{border:1px solid #ccc;height:500px}
+    </style></head><body>${htmlRef.current.innerHTML}</body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     saveAs(blob, `${baseName}.html`)
   }
+
   const downloadSuricataJSON = () => {
     const url = `/meta_json/${baseName}_suricata.json`
     const a = document.createElement('a')
@@ -179,13 +184,41 @@ export default function AnalysisPage() {
 
   return (
     <>
+      {/* HTML 내보내기용 숨김 영역 */}
       <div
         ref={htmlRef}
         style={{ position: 'absolute', top: -9999, left: -9999, width: 800 }}
       >
-        {/* Off-screen export */}
+        <div className="header">
+          <div>
+            <strong>Name:</strong> {filename}
+          </div>
+          <div>
+            <strong>SHA-256:</strong> {data.get_metadata.sha256}
+          </div>
+          <div>
+            <strong>Submission Date:</strong> {submissionDate}
+          </div>
+        </div>
+        {SECTIONS.map((section, idx) => (
+          <div key={idx}>
+            <h2>{section}</h2>
+            {idx === 2 ? (
+              <div className="iframe-container">
+                <iframe
+                  src={`${window.location.origin}/static/callgraphs/${baseName}.html`}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              </div>
+            ) : (
+              <pre>{allTexts[idx]}</pre>
+            )}
+          </div>
+        ))}
       </div>
 
+      {/* 실제 화면 UI */}
       <div className="flex flex-col min-h-screen bg-white">
         <div className="px-8 pt-8 pb-2">
           <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-4 justify-between items-start">
@@ -193,7 +226,7 @@ export default function AnalysisPage() {
               Likely Malicious
             </div>
             <div className="flex-1 pl-6 space-y-2">
-              <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+              <div className="space-y-1 text-sm">
                 <div>
                   <strong>Name:</strong> {filename}
                 </div>
@@ -207,36 +240,37 @@ export default function AnalysisPage() {
             </div>
             <div className="flex flex-col gap-2 ml-4 mt-1">
               <button
+                onClick={downloadHTML}
+                className="bg-purple-200 hover:bg-purple-300 px-4 py-2 rounded"
+              >
+                Report
+              </button>
+              <button
                 onClick={downloadJSON}
                 className="bg-blue-200 hover:bg-blue-300 px-4 py-2 rounded"
               >
                 JSON
               </button>
               <button
-                onClick={downloadHTML}
-                className="bg-purple-200 hover:bg-purple-300 px-4 py-2 rounded"
-              >
-                HTML
-              </button>
-              <button
                 onClick={downloadSuricataJSON}
                 className="bg-green-200 hover:bg-green-300 px-4 py-2 rounded"
               >
-                Suricata JSON
+                Suricata
               </button>
             </div>
           </div>
         </div>
+
         <div className="flex flex-1 px-8 pb-8 gap-6">
           <nav className="w-[300px] bg-gray-50 flex flex-col h-[calc(100vh-80px)]">
             {SECTIONS.map((label, idx) => (
               <div
                 key={idx}
                 onClick={() => setCurrentSection(idx)}
-                className={`flex-1 cursor-pointer flex items-center justify-start px-4 ${
+                className={`flex-1 cursor-pointer flex items-center justify-start px-4 h-12 transition-colors ${
                   currentSection === idx
-                    ? 'bg-white border-l-4 border-blue-600 text-blue-600'
-                    : 'bg-blue-400 border-transparent text-white hover:bg-blue-500'
+                    ? 'bg-[#F2F2F7] text-blue-600 font-semibold'
+                    : 'bg-blue-400 text-white hover:bg-[#F2F2F7] hover:text-black'
                 }`}
               >
                 {label}
