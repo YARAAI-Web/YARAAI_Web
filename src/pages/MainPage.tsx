@@ -50,7 +50,7 @@ export default function MainPage() {
         {/* ────────────── 바깥 네모 ────────────── */}
         <div
           className="
-            w-[766px] h-[290px] 
+            w-[980px] h-[344px] 
             rounded-xl 
             p-4
             flex flex-col items-start
@@ -72,7 +72,7 @@ export default function MainPage() {
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => document.getElementById('fileInput')?.click()}
-            className="w-[720px] h-[200px] 
+            className="w-[908px] h-[250px] 
             bg-[#f2f2f7] 
             rounded-xl 
             border border-gray-300 
@@ -109,7 +109,7 @@ export default function MainPage() {
           onClick={handleAnalysis}
           disabled={!file || loading}
           className={`
-            w-[250px] h-[50px] rounded-full text-[16px] font-extrabold border transition-colors duration-200
+            w-[300px] h-[50px] rounded-full text-[16px] font-extrabold border transition-colors duration-200
             ${
               file && !loading
                 ? 'bg-[#1b65fe] border-[#1b65fe] text-[#FFFFFF] hover:bg-[#1550cc]'

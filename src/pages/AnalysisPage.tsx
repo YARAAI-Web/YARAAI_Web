@@ -29,12 +29,12 @@ interface AnalysisResult {
 
 const SECTIONS = [
   '❶ 정적 분석 결과파일 구조',
-  '❷ 동적 분석 결과 (Behavioral) 프로세스 행위',
+  '❷ 동적 분석 결과 프로세스 행위',
   '❸ Call Graph → 인터랙티브 그래프',
   '❹ MITRE ATT&CK 매핑 / ATT&CK ID기법',
   '❺ Artifacts 덤프 파일',
   '❻ 인사이트/위협 및 위험 요약',
-  '❼ CWE 기반 보안 권고사항 (Recommendations)',
+  '❼ CWE 기반 보안 권고사항',
 ]
 
 export default function AnalysisPage() {
@@ -62,17 +62,15 @@ export default function AnalysisPage() {
     setFilename(rawFilename)
   }, [rawFilename, navigate])
 
-  // 2) 메타 + GPT 섹션 호출 또는 캐시/History state 사용
+  // 2) 데이터 fetch / 캐시 / 히스토리 로직
   useEffect(() => {
     if (!filename) return
     setLoading(true)
 
-    // baseName, storage keys
     const baseName = filename.replace(/\.[^.]+$/i, '')
     const keySections = `yaraai_sections_${baseName}`
     const keyDate = `yaraai_date_${baseName}`
 
-    // 2-0) History state가 있으면 우선 사용
     const histData: AnalysisResult | undefined = location.state?.data
     const histSecs: string[] | undefined = location.state?.sections
     const histDate: string | undefined = location.state?.date
@@ -84,31 +82,21 @@ export default function AnalysisPage() {
       return
     }
 
-    // 2-1) sessionStorage 캐시 확인
     const savedSecs = sessionStorage.getItem(keySections)
     const savedDate = sessionStorage.getItem(keyDate)
     if (savedSecs) {
-      // 1) 섹션 텍스트와 제출일 바로 로드
       setAllTexts(JSON.parse(savedSecs))
       setSubmissionDate(savedDate || new Date().toLocaleString())
 
-      // 2) 메타데이터도 서버에서 다시 fetch
       axios
         .get<AnalysisResult>(`/reports/${filename}`)
-        .then((res) => {
-          setData(res.data)
-        })
-        .catch((err) => {
-          setError(err.response?.data?.detail || err.message)
-        })
-        .finally(() => {
-          setLoading(false)
-        })
+        .then((res) => setData(res.data))
+        .catch((err) => setError(err.response?.data?.detail || err.message))
+        .finally(() => setLoading(false))
 
       return
     }
 
-    // 2-2) 캐시 없으면 서버에서 메타 + GPT 섹션 호출
     let nowStr = new Date().toLocaleString()
     axios
       .get<AnalysisResult>(`/reports/${filename}`)
@@ -116,18 +104,13 @@ export default function AnalysisPage() {
         setData(res.data)
         nowStr = new Date().toLocaleString()
         setSubmissionDate(nowStr)
-
-        // Promise.all 로 7개 섹션 비동기 호출
         return Promise.all(
           SECTIONS.map((_, idx) => {
-            if (idx === 2) {
-              // Call Graph 섹션은 HTML iframe로 대체
-              return Promise.resolve('(Call Graph)')
-            }
+            if (idx === 2) return Promise.resolve('(Call Graph)')
             return axios
               .post<{ text: string }>('/api/section', {
                 sectionId: idx + 1,
-                filename: filename,
+                filename,
               })
               .then((r) => r.data.text)
               .catch(() => '(불러오기 실패)')
@@ -136,19 +119,13 @@ export default function AnalysisPage() {
       })
       .then((texts) => {
         setAllTexts(texts)
-        // 2-3) 호출 완료 후 세션 스토리지에 저장
         sessionStorage.setItem(keySections, JSON.stringify(texts))
         sessionStorage.setItem(keyDate, nowStr)
       })
-      .catch((err) => {
-        setError(err.response?.data?.detail || err.message)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+      .catch((err) => setError(err.response?.data?.detail || err.message))
+      .finally(() => setLoading(false))
   }, [filename, location.state])
 
-  // 로딩/에러/없음 처리
   if (loading) return <div className="p-8 text-center">로딩 중…</div>
   if (error) return <div className="p-8 text-red-500">오류 발생: {error}</div>
   if (!data || !filename)
@@ -156,7 +133,6 @@ export default function AnalysisPage() {
 
   const baseName = filename.replace(/\.[^.]+$/i, '')
 
-  // ▼ 다운로드 함수들
   const downloadJSON = () => {
     const {
       get_metadata,
@@ -203,40 +179,13 @@ export default function AnalysisPage() {
 
   return (
     <>
-      {/* Off-screen HTML export */}
       <div
         ref={htmlRef}
         style={{ position: 'absolute', top: -9999, left: -9999, width: 800 }}
       >
-        <div className="header">
-          <div>
-            <strong>Name:</strong> {filename}
-          </div>
-          <div>
-            <strong>SHA-256:</strong> {data.get_metadata.sha256}
-          </div>
-          <div>
-            <strong>Submission Date:</strong> {submissionDate}
-          </div>
-        </div>
-        {SECTIONS.map((title, idx) => (
-          <div className="section" key={idx}>
-            <h2>{title}</h2>
-            {idx === 2 ? (
-              <div className="iframe-container">
-                <iframe
-                  src={`http://localhost:8000/static/callgraphs/${baseName}.html`}
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                />
-              </div>
-            ) : (
-              <pre>{allTexts[idx]}</pre>
-            )}
-          </div>
-        ))}
+        {/* Off-screen export */}
       </div>
 
-      {/* Screen UI */}
       <div className="flex flex-col min-h-screen bg-white">
         <div className="px-8 pt-8 pb-2">
           <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-4 justify-between items-start">
@@ -278,16 +227,15 @@ export default function AnalysisPage() {
             </div>
           </div>
         </div>
-
         <div className="flex flex-1 px-8 pb-8 gap-6">
-          <nav className="w-[260px] bg-gray-50 border-r p-4 space-y-2">
+          <nav className="w-[300px] bg-gray-50 flex flex-col h-[calc(100vh-80px)]">
             {SECTIONS.map((label, idx) => (
               <div
                 key={idx}
                 onClick={() => setCurrentSection(idx)}
-                className={`cursor-pointer h-12 flex items-center px-4 border-l-4 rounded ${
+                className={`flex-1 cursor-pointer flex items-center justify-start px-4 ${
                   currentSection === idx
-                    ? 'bg-white border-blue-600 text-blue-600'
+                    ? 'bg-white border-l-4 border-blue-600 text-blue-600'
                     : 'bg-blue-400 border-transparent text-white hover:bg-blue-500'
                 }`}
               >
@@ -295,6 +243,7 @@ export default function AnalysisPage() {
               </div>
             ))}
           </nav>
+
           <main className="flex-1 overflow-auto p-4 bg-white rounded-xl shadow border-l-4 border-[#0F3ADA]">
             <h2 className="text-xl font-bold text-[#0F3ADA] mb-4">
               {SECTIONS[currentSection]}

@@ -9,11 +9,9 @@ export default function Header() {
   const isHistory = location.pathname === '/history'
 
   return (
-    <header
-      className="w-full border-b-1 bg-white relative"
-      style={{ borderColor: 'rgba(0, 0, 0, 0.15)', marginTop: '10px' }}
-    >
-      <div className="mx-auto max-w-5xl flex items-center justify-between relative px-8 py-4">
+    <header className="w-full bg-white">
+      {/* ──── 로고 + 히스토리 버튼 컨테이너 ──── */}
+      <div className="mx-auto max-w-5xl flex items-center justify-between px-8 py-4">
         <img
           src={Logo}
           alt="YARAAI"
@@ -21,8 +19,6 @@ export default function Header() {
           className="cursor-pointer"
           style={{ height: '3.5rem', width: 'auto' }}
         />
-
-        {/* History 버튼 */}
         <button
           type="button"
           onClick={() => navigate('/history')}
@@ -35,8 +31,30 @@ export default function Header() {
           "
         >
           History
+          {isHistory && (
+            <span
+              className={`
+                absolute
+                bottom-0           /* 버튼 바로 아래 */
+                left-1/2
+                -translate-x-1/2
+                w-12
+                border-b-2
+                border-[#1b65fe]
+              `}
+            />
+          )}
         </button>
       </div>
+
+      {/* ──── 분리된 밑줄 (라인) ──── */}
+      <div
+        className="mx-auto max-w-5xl"
+        style={{
+          borderBottom: '1.2px solid rgba(0,0,0,0.15)',
+          marginTop: '12px', // ← 이 값을 조절해서 라인 위치만 내림
+        }}
+      />
     </header>
   )
 }
