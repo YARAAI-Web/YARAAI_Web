@@ -116,7 +116,11 @@ export default function AnalysisPage() {
             return axios
               .post<{ text: string }>('/api/section', {
                 sectionId: idx + 1,
+<<<<<<< HEAD
                 filename: filename,
+=======
+                filename: filename
+>>>>>>> 5c2aeb67d28118b0e4ebc62e658b0f936d6117c6
               })
               .then((r) => r.data.text)
               .catch(() => '(불러오기 실패)')

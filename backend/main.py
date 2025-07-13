@@ -1,3 +1,4 @@
+# main.py
 from dotenv import load_dotenv # test
 import os
 import uuid
@@ -170,10 +171,27 @@ async def get_history(file_id: str):
 # 🧠 GPT 분석 섹션 API (1~7)
 class SectionRequest(BaseModel):
     sectionId: int
-    metadata: dict
+    filename: str
 
-SECTION_PROMPTS = {
-    1: """① 패킹 또는 암호화 기법 사용 여부
+@app.post("/api/section")
+def fetch_gpt_section(req: SectionRequest = Body(...)):
+    base = os.path.splitext(req.filename)[0]
+    meta_path = os.path.join(META_DIR, f"{base}.json")
+    if not os.path.isfile(meta_path):
+        raise HTTPException(status_code=404, detail="Report not found")
+    with open(meta_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    section_map = {
+        1: "❶ 정적 분석 결과 구조",
+        2: "❷ 동적 분석 결과 (프로세스 및 레지스트리)",
+        3: "❸ Call Graph",
+        4: "❹ MITRE ATT&CK 매핑",
+        5: "❺ Artifacts 덤프 파일",
+        6: "❻ 위협 흐름 및 목적 요약",
+        7: "❼ CWE 기반 권고",
+    }
+    SECTION_PROMPTS = {
+    1: f"""① 패킹 또는 암호화 기법 사용 여부
 - Entropy 분석 및 패커 명칭 확인
 - .text 섹션 해시 제공
 
@@ -184,31 +202,32 @@ SECTION_PROMPTS = {
 ③ YARA 룰 매칭 분석
 - 룰 이름, 조건식, 탐지 문자열 정리
 - 커버리지 평가""",
-    2: """① 프로세스 행위 분석
+    2: f"""① 프로세스 행위 분석
 - cmd.exe → powershell.exe → svchost.exe 흐름 여부
 - 타임라인 기반 정렬 및 자식 PID 기록
 - Process Hollowing 여부
 
 ② 레지스트리 조작 분석
 - Run 키, Task Scheduler, 서비스 등록 여부""",
-    3: """① 함수 호출 흐름 시각화
+    3: f"""① 함수 호출 흐름 시각화
 - 주요 함수 중심 노드/엣지 구조 정리
 - 기능 단위로 군집화
 - 루트 함수 강조 및 전체 노드/엣지 수 요약""",
-    4: """① MITRE ATT&CK 기술 매핑
+    4: f"""① MITRE ATT&CK 기술 매핑
 - 탐지된 행위별 TTP 코드 연결
+{data['MITRE']}
 
 ② 근거 제공
 - 명령어, 로그 등 증거 기반 설명
 
 ③ 시나리오 정리
 - 공격 흐름을 시간 순으로 구성""",
-    5: """① 생성 파일 덤프 요약
+    5: f"""① 생성 파일 덤프 요약
 - 경로, 해시, 권한, 타임스탬프
 
 ② 시스템 로그 분석
 - 실행 시점, 파일 경로, 행위 요약""",
-    6: """① 위협 흐름 정리
+    6: f"""① 위협 흐름 정리
 - 자식 프로세스 생성 → 설정 변경 → 외부 통신 구조
 
 ② 공격 목적 유추
@@ -216,8 +235,9 @@ SECTION_PROMPTS = {
 
 ③ 유사 샘플 비교
 - 탐지된 룰 또는 행동 기반 비교""",
-    7: """① CWE ID 매핑
+    7: f"""① CWE ID 매핑
 - 탐지된 행위별 CWE 코드
+{data['CWE']}
 
 ② 대응책 제시
 - 기술적 보안 권고사항 요약
@@ -225,26 +245,15 @@ SECTION_PROMPTS = {
 ③ 취약점 우선순위 분류
 - Critical/High 등급 시각화""",
 }
-
-@app.post("/api/section")
-def fetch_gpt_section(req: SectionRequest = Body(...)):
-    section_map = {
-        1: "❶ 정적 분석 결과 구조",
-        2: "❷ 동적 분석 결과 (프로세스 및 레지스트리)",
-        3: "❸ Call Graph",
-        4: "❹ MITRE ATT&CK 매핑",
-        5: "❺ Artifacts 덤프 파일",
-        6: "❻ 위협 흐름 및 목적 요약",
-        7: "❼ CWE 기반 권고",
-    }
     section_title = section_map.get(req.sectionId)
     prompt_body   = SECTION_PROMPTS.get(req.sectionId)
     if not section_title or not prompt_body:
         raise HTTPException(status_code=400, detail="Invalid sectionId")
 
-    meta = req.metadata
+    meta = data['get_metadata']
     prompt = f"""
-당신은 악성코드 분석 전문가입니다。
+당신은 악성코드 분석 전문가입니다。한글로 아래의 요구사항을 해결해주세요。
+Make sure to think step-by-step when answering
 
 <분석 대상 개요>
 - 파일명: {meta.get("module","")}
