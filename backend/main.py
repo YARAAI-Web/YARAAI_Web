@@ -254,6 +254,7 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     prompt = f"""
 당신은 악성코드 분석 전문가입니다。한글로 아래의 요구사항을 해결해주세요。
 Make sure to think step-by-step when answering
+출력은 반드시 **마크다운 형식 없이**, 일반 텍스트만 사용하여 작성해주세요.
 
 <분석 대상 개요>
 - 파일명: {meta.get("module","")}
