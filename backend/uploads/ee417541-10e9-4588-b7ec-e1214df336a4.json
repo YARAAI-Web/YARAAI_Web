@@ -1,7 +1,7 @@
 {
   "get_metadata": {
-    "path": "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web\\backend\\uploads\\251bc948-9bed-4cf6-b784-276e8a523efd.exe",
-    "module": "251bc948-9bed-4cf6-b784-276e8a523efd.exe",
+    "path": "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web\\backend\\uploads\\ee417541-10e9-4588-b7ec-e1214df336a4.exe",
+    "module": "ee417541-10e9-4588-b7ec-e1214df336a4.exe",
     "base": "0x140000000",
     "size": "0x13d000",
     "md5": "5a75d0870cf22d2e8cdf8cbc31fad3f1",
@@ -25,7 +25,7 @@
     "max_str_len": 0
   },
   "pe_headers": {
-    "file_name": "251bc948-9bed-4cf6-b784-276e8a523efd.exe",
+    "file_name": "ee417541-10e9-4588-b7ec-e1214df336a4.exe",
     "machine": "0x8664",
     "number_of_sections": 6,
     "time_date_stamp": "0xae1bc4f8",
@@ -96,7 +96,7 @@
     ]
   },
   "c_code": [
-    "#include \"251bc948-9bed-4cf6-b784-276e8a523efd.h\"",
+    "#include \"ee417541-10e9-4588-b7ec-e1214df336a4.h\"",
     "",
     "HRESULT __stdcall StringCchCopyA(STRSAFE_LPSTR pszDest, size_t cchDest, STRSAFE_LPCSTR pszSrc)",
     "{",
@@ -5396,7 +5396,7 @@
   "yara_rules": "",
   "capa_rules": {
     "meta": {
-      "timestamp": "2025-07-13T13:38:38.785061",
+      "timestamp": "2025-07-13T14:42:44.734458",
       "version": "9.2.1",
       "argv": [
         "-r",
@@ -5404,13 +5404,13 @@
         "-s",
         "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web\\backend\\services\\CAPA\\capa-sigs",
         "--json",
-        "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web\\backend\\uploads\\251bc948-9bed-4cf6-b784-276e8a523efd.exe"
+        "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web\\backend\\uploads\\ee417541-10e9-4588-b7ec-e1214df336a4.exe"
       ],
       "sample": {
         "md5": "5a75d0870cf22d2e8cdf8cbc31fad3f1",
         "sha1": "7b650488f71172a3d0be1c9fb4f26869245b0c5e",
         "sha256": "7257766c7a1d0bf3fe2f6634877c4238d19bd7acd458a828f7851e145e7e295a",
-        "path": "F:/users/WhiteHat/YARRAAI/code/YARRAI_Web/backend/uploads/251bc948-9bed-4cf6-b784-276e8a523efd.exe"
+        "path": "F:/users/WhiteHat/YARRAAI/code/YARRAI_Web/backend/uploads/ee417541-10e9-4588-b7ec-e1214df336a4.exe"
       },
       "flavor": "static",
       "analysis": {
