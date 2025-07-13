@@ -13,6 +13,7 @@ from openai import OpenAI
 from services.analysis import analyze_file
 from generate_callgraph import generate_call_graph
 from services.suricata.yara_generator import generate_yara_rule
+from services.unpacker import detect_packers, unpack_file
 
 # 🔐 환경 변수 로드
 load_dotenv()
@@ -21,6 +22,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # 📁 디렉터리 경로 설정
 BASE_DIR      = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR    = os.path.join(BASE_DIR, "uploads")
+UNPACK_DIR   = os.path.join(BASE_DIR, "services", "unpacked")
 META_DIR      = os.path.join(BASE_DIR, "meta_json")
 STATIC_DIR    = os.path.join(BASE_DIR, "static", "callgraphs")
 CAPA_JSON_DIR = os.path.join(BASE_DIR, "services", "CAPA", "capa_json")
@@ -60,6 +62,24 @@ async def upload_and_analyze(file: UploadFile = File(...)):
         f.write(data)
     base_uuid = os.path.splitext(unique_name)[0]
 
+    # 1.5) 패커 탐지
+    packers = detect_packers(dest_path)
+    print(f"Detected packers: {packers}")
+
+    # 패커가 감지되었을 때만 언패킹 시도 및 분석 대상 경로 결정
+    if packers:
+        unpack_results = unpack_file(dest_path, UNPACK_DIR, packers)
+        print(f"Unpack results: {unpack_results}")
+
+        # 언패킹에 성공한 패커가 하나라도 있으면 unpacked 파일을 분석
+        if any(unpack_results.values()):
+            analyze_path = os.path.join(UNPACK_DIR, os.path.basename(dest_path))
+        else:
+            analyze_path = dest_path
+    else:
+        # 패커가 없으면 원본 그대로 분석
+        analyze_path = dest_path
+    
     # 2) 정적/동적 분석
     try:
         report = analyze_file(dest_path)

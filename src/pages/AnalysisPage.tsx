@@ -1,3 +1,4 @@
+// AnalysisPage.tsx
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
@@ -69,7 +70,6 @@ export default function AnalysisPage() {
     // baseName, storage keys
     const baseName = filename.replace(/\.[^.]+$/i, '')
     const keySections = `yaraai_sections_${baseName}`
-    const keyMeta = `yaraai_meta_${baseName}`
     const keyDate = `yaraai_date_${baseName}`
 
     // 2-0) History state가 있으면 우선 사용
@@ -86,11 +86,10 @@ export default function AnalysisPage() {
 
     // 2-1) sessionStorage 캐시 확인
     const savedSecs = sessionStorage.getItem(keySections)
-    const savedMeta = sessionStorage.getItem(keyMeta)
     const savedDate = sessionStorage.getItem(keyDate)
-    if (savedSecs && savedMeta) {
+    if (savedSecs) {
       setAllTexts(JSON.parse(savedSecs))
-      setData(JSON.parse(savedMeta))
+      // 메타는 캐시하지 않으므로 data는 새로 fetch하게 됩니다
       setSubmissionDate(savedDate || new Date().toLocaleString())
       setLoading(false)
       return
@@ -117,12 +116,7 @@ export default function AnalysisPage() {
             return axios
               .post<{ text: string }>('/api/section', {
                 sectionId: idx + 1,
-                metadata: {
-                  module: res.data.get_metadata.module,
-                  sha256: res.data.get_metadata.sha256,
-                  fileType: res.data.get_metadata.format || '',
-                  fileSize: res.data.get_metadata.filesize || '',
-                },
+                filename: filename,
               })
               .then((r) => r.data.text)
               .catch(() => '(불러오기 실패)')
@@ -133,7 +127,6 @@ export default function AnalysisPage() {
         setAllTexts(texts)
         // 2-3) 호출 완료 후 세션 스토리지에 저장
         sessionStorage.setItem(keySections, JSON.stringify(texts))
-        sessionStorage.setItem(keyMeta, JSON.stringify(fetchedMeta))
         sessionStorage.setItem(keyDate, nowStr)
       })
       .catch((err) => {
