@@ -213,11 +213,10 @@ export default function AnalysisPage() {
             <h2>{title}</h2>
             {idx === 2 ? (
               <div className="iframe-container">
-                <iframe
-                  src={`/static/callgraphs/${baseName}.html`}
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                  sandbox="allow-scripts allow-same-origin"
-                />
+                  <iframe 
+                    src={`http://localhost:8000/static/callgraphs/${baseName}.html`} 
+                    style={{ width: '100%', height: '100%', border: 'none' }} 
+                  />
               </div>
             ) : (
               <pre>{allTexts[idx]}</pre>
