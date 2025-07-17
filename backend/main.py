@@ -32,6 +32,14 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(META_DIR, exist_ok=True)
 os.makedirs(STATIC_DIR, exist_ok=True)
 
+def format_cwe(data_cwe: list) -> str:
+    formatted = []
+    for name, code, description in data_cwe:
+        summary = description.split("::")[0].strip() if description else ""
+        print(f"Formatted CWE: {name} ({code}) - {summary}")
+        formatted.append(f"- [{code}] {name}: {summary}")
+    return "\n".join(formatted)
+
 # 🚀 FastAPI 앱 설정
 app = FastAPI(title="YARAAI Analysis API")
 
@@ -195,34 +203,45 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     }
     SECTION_PROMPTS = {
     1: f"""① 요약
-    - 과정 설명 간단하게(1~2문장) + 악성코드가 발생함으로써 생기는 결과(결론적으로~): 목적…""",
-    2: f"""(0) 파일 크기, 포맷(EXE랑 dll 구분. PE header로)
+- 다음 정보를 포함한 요약 리포트 5줄 이상으로 자연어 처리
+{data['MITRE'][:3]}, {data['get_metadata'].get('module', '')}""",
 
-(1) 해당 악성코드 파일에서 패킹이 사용되었는지 분석
+    2: f"""② 정적 분석
+(1) 파일 정보
+- 형식: {data['get_metadata'].get('fileType', '')}
+- 크기: {data['get_metadata'].get('fileSize', '')} bytes
 
-- 섹션 기반 패킹 여부 확인
-- 사용된 패커 이름(예: UPX, Themida) 제공
+(2) 패킹 여부
+- 엔트로피: {data['file_entropy']}
+- 패커 탐지 결과: 추후 반영 필요
 
-(2) Import 함수 목록
+(3) Import 함수
+- 주요 예시: {', '.join(data['pe_headers'].get('imports', []))}
 
-- (.idata 섹션에서 추가 추출)
+(4) YARA 룰 매칭
+- 룰 수: {len(data['yara_rules']) if isinstance(data['yara_rules'], list) else 1}
+- 커버리지 평가: 추후 반영 필요""",
 
-(3) YARA 룰 매칭 결과를 분석(보류-서웅이의 결과 나오고)
+    3: f"""③ 동적 분석
+- 악성코드 실행 시 생성된 프로세스 정보 확인
+- 레지스트리 키 조작 여부 확인
+- 파일 생성/수정/삭제 이벤트 확인
+- 위 행위들의 로그를 시간대별로 정리""",
 
-- 룰 이름, 조건식, meta 정보, 탐지 문자열 전체 리스트 제공
-- 룰 커버리지 수준도 평가""",
-    3: f"""- 악성코드 실행 시 어떤 프로세스가 생성되었는지
-- 어떤 레지스트리 키가 조작되었는지
-- 파일이 생성/변경/삭제되었는지 등 시스템 상의 행위(Event)를 기록
-- 시스템 로그(실행 시점, 경로, 행위 등)를 정리""",
-    4: f"""callgraph.html 파일을 생성하여
-- 함수 호출 관계를 시각적으로 표현""",
-    5: f"""(1) 각 기술에 대응하는 로그나 명령어 근거를 제공 ⇒ capa로? 
-(2) CAPA 클러스터링으로 악성코드 분류 후 설명 제공
+    4: f"""④ 인터랙티브 Call Graph
+- 함수 호출 관계를 시각적으로 표현한 HTML 파일 생성됨
+- 분석가가 내부 로직 흐름을 빠르게 파악할 수 있음""",
+
+    5: f"""⑤ MITRE ATT&CK 매핑
+- 감지된 기술: {', '.join(data['MITRE'])}
+- 제공된 각 기술에 대한 설명을 자연어 처리해서 제공. 예를 들어 T1082 : "System Information Discovery"는 시스템 정보를 수집하는 기술로, 공격자가 시스템의 구성 요소를 이해하고 취약점을 찾는 데 사용됨." 이런 형식으로 설명해주세요.
 {data['MITRE']}""",
+
     6: f"""(1) 탐지된 행위별로 해당하는 CWE ID를 매핑한 후 각 CWE에 대한 설명과 저 1000.csv 에 어떤 기준으로 매핑한 건지 자연어 처리 
-{data['CWE']}""",
+    예를 들어 CWE-785: "use of path manipulation function without maximum-sized buffer"는 경로 조작 함수 사용 시 출력 버퍼 크기를 충분히 지정하지 않아 버퍼 오버플로우 등의 취약점으로 이어질 수 있는 경우에 해당함. 이런 형식으로 작성해주세요.
+{format_cwe(data['CWE'])}"""
 }
+
     section_title = section_map.get(req.sectionId)
     prompt_body   = SECTION_PROMPTS.get(req.sectionId)
     if not section_title or not prompt_body:
@@ -232,14 +251,13 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     prompt = f"""
 당신은 악성코드 분석 전문가입니다. 한글로 아래의 요구사항을 해결해주세요. 
 출력은 반드시 **마크다운 형식 없이**, 일반 텍스트만 사용하여 작성해주세요. 
-제공한 정보 이외의 내용들을 출력하지 마세요. Make sure to think step-by-step when answering. 
-
-악성코드 분석가들이 악성코드를 정적/동적 분석 툴을 사용하지 않고 악성코드에 대한 전반적인 정보를 얻을 수 있게 해주세요.
-
-정확하고 명료한 문장으로 잘 풀어써주세요
+제공한 정보 이외의 내용들을 출력하지 마세요. 
+정확하고 구체적인 문장으로 최대한 풀어써주세요. 
+초등학생들도 알 수 있게 작성해주세요.
+문체를 “~함”으로 통일해주세요.
 표준 용어(IOC, TTP, MITRE ATT&CK) 사용해주세요
-
 객관적이고 중립적인 어조를 사용해주세요
+Make sure to think step-by-step when answering. 
 
 <분석 대상 개요>
 - 파일명: {meta.get("module","")}

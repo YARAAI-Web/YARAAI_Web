@@ -27,13 +27,12 @@ interface AnalysisResult {
 }
 
 const SECTIONS = [
-  '❶ 정적 분석 결과파일 구조',
-  '❷ 동적 분석 결과 프로세스 행위',
-  '❸ 인터랙티브 그래프(Call Graph)',
-  '❹ MITRE ATT&CK 매핑 / ATT&CK ID기법',
-  '❺ Artifacts 덤프 파일',
-  '❻ 인사이트/위협 및 위험 요약',
-  '❼ CWE 기반 보안 권고사항',
+  '❶ 요약',
+  '❷ 정적 분석',
+  '❸ 동적 분석',
+  '❹ 인터랙티브 그래프(call graph)',
+  '❺ MITRE ATT&CK 매핑',
+  '❻  CWE 기반 보안 권고',
 ]
 
 export default function AnalysisPage() {
@@ -103,7 +102,7 @@ export default function AnalysisPage() {
         setSubmissionDate(nowStr)
         return Promise.all(
           SECTIONS.map((_, idx) => {
-            if (idx === 2) return Promise.resolve('(Call Graph)')
+            if (idx === 3) return Promise.resolve('(Call Graph)')
             return axios
               .post<{ text: string }>('/api/section', {
                 sectionId: idx + 1,
@@ -163,9 +162,9 @@ export default function AnalysisPage() {
 
   const downloadHTML = () => {
     if (!htmlRef.current) return
-    const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><title>보고서 - ${baseName}</title><style>
+    const html = `<!DOCTYPE html><html lang=\"ko\"><head><meta charset=\"UTF-8\"/><title>보고서 - ${baseName}</title><style>
       body{font-family:sans-serif;padding:20px}
-      .header{border:2px solid #000;padding:10px;margin-bottom:20px}
+      .header{border:2px solid #000;padding:6px;margin-bottom:10px}
       h2{color:#0F3ADA;margin-top:30px}
       pre{white-space:pre-wrap}
       .iframe-container{border:1px solid #ccc;height:500px}
@@ -220,9 +219,9 @@ export default function AnalysisPage() {
 
       {/* 실제 화면 UI */}
       <div className="flex flex-col min-h-screen bg-white">
-        <div className="px-8 pt-8 pb-2">
-          <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-4 justify-between items-start">
-            <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md">
+        <div className="px-8 pt-4 pb-0">
+          <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-2 justify-between items-start">
+            <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md p-2">
               Likely Malicious
             </div>
             <div className="flex-1 pl-6 space-y-2">
@@ -261,7 +260,7 @@ export default function AnalysisPage() {
           </div>
         </div>
 
-        <div className="flex flex-1 px-8 pb-8 gap-6">
+        <div className="flex flex-1 px-8 pt-0 pb-8 gap-6 -mt-1000">
           <nav className="w-[300px] bg-gray-50 flex flex-col h-[calc(100vh-80px)]">
             {SECTIONS.map((label, idx) => (
               <div
@@ -282,7 +281,7 @@ export default function AnalysisPage() {
             <h2 className="text-xl font-bold text-[#0F3ADA] mb-4">
               {SECTIONS[currentSection]}
             </h2>
-            {currentSection === 2 ? (
+            {currentSection === 3 ? (
               <iframe
                 src={`/static/callgraphs/${baseName}.html`}
                 className="w-full h-[800px] border-none rounded"

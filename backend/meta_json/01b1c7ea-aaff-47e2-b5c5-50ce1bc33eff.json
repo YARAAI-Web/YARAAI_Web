@@ -1,0 +1,175 @@
+{
+  "get_metadata": {
+    "path": "D:\\Whitehat\\web\\YARRAI_Web\\backend\\uploads\\01b1c7ea-aaff-47e2-b5c5-50ce1bc33eff.exe",
+    "module": "01b1c7ea-aaff-47e2-b5c5-50ce1bc33eff.exe",
+    "base": "0x180000000",
+    "size": "0x26000",
+    "md5": "40c6e5581cd92a3bc7c626642fd5290c",
+    "sha256": "d2b40561ece83b0a3f98cc91e32ae46dd85776276dcbb4d6488de5b816589991",
+    "crc32": "0x177ddf8",
+    "filesize": "0x2c50"
+  },
+  "get_current_address": "0x180004e20",
+  "get_current_function": "0x180004e20",
+  "get_entry_points": {},
+  "file_entropy": 6.547921968821048,
+  "string_stats": {
+    "string_count": 0,
+    "avg_str_len": 0,
+    "max_str_len": 0
+  },
+  "pe_headers": {
+    "file_name": "01b1c7ea-aaff-47e2-b5c5-50ce1bc33eff.exe",
+    "machine": "0x8664",
+    "number_of_sections": 5,
+    "time_date_stamp": "0x6731a603",
+    "pointer_to_symbol_table": "0x0",
+    "number_of_symbols": 0,
+    "size_of_optional_header": 240,
+    "characteristics": "0x2022",
+    "entry_point": "0x4e20",
+    "image_base": "0x180000000",
+    "section_alignment": "0x1000",
+    "file_alignment": "0x200",
+    "subsystem": "0x2",
+    "dll_characteristics": "0x160",
+    "sections": [
+      {
+        "name": ".text",
+        "virtual_address": "0x1000",
+        "virtual_size": "0x3ea8",
+        "raw_size": "0x4000",
+        "characteristics": "0x60000020"
+      },
+      {
+        "name": ".rdata",
+        "virtual_address": "0x5000",
+        "virtual_size": "0x288",
+        "raw_size": "0x400",
+        "characteristics": "0x40000040"
+      },
+      {
+        "name": ".data",
+        "virtual_address": "0x6000",
+        "virtual_size": "0x1d498",
+        "raw_size": "0x1d600",
+        "characteristics": "0xc0000040"
+      },
+      {
+        "name": ".pdata",
+        "virtual_address": "0x24000",
+        "virtual_size": "0xc",
+        "raw_size": "0x200",
+        "characteristics": "0x40000040"
+      },
+      {
+        "name": ".rsrc",
+        "virtual_address": "0x25000",
+        "virtual_size": "0x1a8",
+        "raw_size": "0x200",
+        "characteristics": "0x40000040"
+      }
+    ]
+  },
+  "virustotal": {
+    "sha256": "d2b40561ece83b0a3f98cc91e32ae46dd85776276dcbb4d6488de5b816589991",
+    "type_tag": "pedll",
+    "popular_threat_name": null,
+    "tags": [
+      "64bits",
+      "idle",
+      "pedll",
+      "corrupt",
+      "overlay"
+    ]
+  },
+  "c_code": [
+    "#include \"01b1c7ea-aaff-47e2-b5c5-50ce1bc33eff.h\"",
+    ""
+  ],
+  "h_code": [
+    "#include <windows.h>",
+    "#include <stdint.h>",
+    "#include <stdio.h>",
+    "",
+    "#include \"defs.h\"",
+    "",
+    "void JUMPOUT(int a) {",
+    "}",
+    "",
+    "unsigned int _bss_start__ = 0;",
+    "unsigned int __cxa_finalize = 0;"
+  ],
+  "summary": [],
+  "yara_rules": "",
+  "capa_rules": {
+    "meta": {
+      "timestamp": "2025-07-18T00:36:18.196695",
+      "version": "9.2.1",
+      "argv": [
+        "-r",
+        "D:\\Whitehat\\web\\YARRAI_Web\\backend\\services\\CAPA\\capa-rules",
+        "-s",
+        "D:\\Whitehat\\web\\YARRAI_Web\\backend\\services\\CAPA\\capa-sigs",
+        "--json",
+        "D:\\Whitehat\\web\\YARRAI_Web\\backend\\uploads\\01b1c7ea-aaff-47e2-b5c5-50ce1bc33eff.exe"
+      ],
+      "sample": {
+        "md5": "40c6e5581cd92a3bc7c626642fd5290c",
+        "sha1": "f7316be42b293aeb44d96b070a0c1c6bf18ccf10",
+        "sha256": "d2b40561ece83b0a3f98cc91e32ae46dd85776276dcbb4d6488de5b816589991",
+        "path": "D:/Whitehat/web/YARRAI_Web/backend/uploads/01b1c7ea-aaff-47e2-b5c5-50ce1bc33eff.exe"
+      },
+      "flavor": "static",
+      "analysis": {
+        "format": "pe",
+        "arch": "amd64",
+        "os": "windows",
+        "extractor": "VivisectFeatureExtractor",
+        "rules": [
+          "D:/Whitehat/web/YARRAI_Web/backend/services/CAPA/capa-rules"
+        ],
+        "base_address": {
+          "type": "absolute",
+          "value": 6442450944
+        },
+        "layout": {
+          "functions": [
+            {
+              "address": {
+                "type": "absolute",
+                "value": 6442470944
+              },
+              "matched_basic_blocks": [
+                {
+                  "address": {
+                    "type": "absolute",
+                    "value": 6442470944
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "feature_counts": {
+          "file": 83,
+          "functions": [
+            {
+              "address": {
+                "type": "absolute",
+                "value": 6442470944
+              },
+              "count": 8
+            }
+          ]
+        },
+        "library_functions": []
+      }
+    },
+    "rules": {}
+  },
+  "MITRE": [],
+  "CWE": [],
+  "suricata_rule": "",
+  "yara_rule": "rule AutoGen_40c6e558 : Malware { meta: description = \"Auto-generated YARA rule based on API usage\" author      = \"YARRAI AutoGen\" date        = \"2025-07-18\" md5         = \"40c6e5581cd92a3bc7c626642fd5290c\" sha256      = \"d2b40561ece83b0a3f98cc91e32ae46dd85776276dcbb4d6488de5b816589991\"  strings: $s0 = \"aaff\" fullword ascii $s1 = \"b5c5\" fullword ascii $s2 = \"include\" fullword ascii  condition: uint16(0) == 0x5A4D and 3 of them }"
+}

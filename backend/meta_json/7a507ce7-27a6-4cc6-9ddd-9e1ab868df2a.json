@@ -1,0 +1,609 @@
+{
+  "get_metadata": {
+    "path": "D:\\Whitehat\\web\\YARRAI_Web\\backend\\uploads\\7a507ce7-27a6-4cc6-9ddd-9e1ab868df2a.dll",
+    "module": "7a507ce7-27a6-4cc6-9ddd-9e1ab868df2a.dll",
+    "base": "0x10000000",
+    "size": "0x8000",
+    "md5": "69db89007fce1ae6aae0c59d45bdebf2",
+    "sha256": "d1a0315869aa9652d440a5c990602d1cee90f538a218a28e35d729386a4ea39a",
+    "crc32": "0xc133bfed",
+    "filesize": "0x2400"
+  },
+  "get_current_address": "0x0",
+  "get_current_function": "0x0",
+  "get_entry_points": {},
+  "file_entropy": 4.764332481359216,
+  "string_stats": {
+    "string_count": 0,
+    "avg_str_len": 0,
+    "max_str_len": 0
+  },
+  "pe_headers": {
+    "file_name": "7a507ce7-27a6-4cc6-9ddd-9e1ab868df2a.dll",
+    "machine": "0x14c",
+    "number_of_sections": 3,
+    "time_date_stamp": "0xb7ae7071",
+    "pointer_to_symbol_table": "0x0",
+    "number_of_symbols": 0,
+    "size_of_optional_header": 224,
+    "characteristics": "0x2022",
+    "entry_point": "0x3a9e",
+    "image_base": "0x10000000",
+    "section_alignment": "0x2000",
+    "file_alignment": "0x200",
+    "subsystem": "0x3",
+    "dll_characteristics": "0x8540",
+    "sections": [
+      {
+        "name": ".text",
+        "virtual_address": "0x2000",
+        "virtual_size": "0x1bf8",
+        "raw_size": "0x1c00",
+        "characteristics": "0x60000020"
+      },
+      {
+        "name": ".rsrc",
+        "virtual_address": "0x4000",
+        "virtual_size": "0x2c0",
+        "raw_size": "0x400",
+        "characteristics": "0x40000040"
+      },
+      {
+        "name": ".reloc",
+        "virtual_address": "0x6000",
+        "virtual_size": "0xc",
+        "raw_size": "0x200",
+        "characteristics": "0x42000040"
+      }
+    ]
+  },
+  "virustotal": {
+    "sha256": "d1a0315869aa9652d440a5c990602d1cee90f538a218a28e35d729386a4ea39a",
+    "type_tag": "pedll",
+    "popular_threat_name": null,
+    "tags": [
+      "detect-debug-environment",
+      "checks-user-input",
+      "idle",
+      "pedll",
+      "assembly"
+    ]
+  },
+  "c_code": [],
+  "h_code": [],
+  "summary": [],
+  "yara_rules": "",
+  "capa_rules": {
+    "meta": {
+      "timestamp": "2025-07-14T04:51:50.795076",
+      "version": "9.2.1",
+      "argv": [
+        "-r",
+        "D:\\Whitehat\\web\\YARRAI_Web\\backend\\services\\CAPA\\capa-rules",
+        "-s",
+        "D:\\Whitehat\\web\\YARRAI_Web\\backend\\services\\CAPA\\capa-sigs",
+        "--json",
+        "D:\\Whitehat\\web\\YARRAI_Web\\backend\\uploads\\7a507ce7-27a6-4cc6-9ddd-9e1ab868df2a.dll"
+      ],
+      "sample": {
+        "md5": "69db89007fce1ae6aae0c59d45bdebf2",
+        "sha1": "b1768d5b90b248881cbad1ed476f90369d5c7569",
+        "sha256": "d1a0315869aa9652d440a5c990602d1cee90f538a218a28e35d729386a4ea39a",
+        "path": "D:/Whitehat/web/YARRAI_Web/backend/uploads/7a507ce7-27a6-4cc6-9ddd-9e1ab868df2a.dll"
+      },
+      "flavor": "static",
+      "analysis": {
+        "format": "dotnet",
+        "arch": "any",
+        "os": "any",
+        "extractor": "DnfileFeatureExtractor",
+        "rules": [
+          "D:/Whitehat/web/YARRAI_Web/backend/services/CAPA/capa-rules"
+        ],
+        "base_address": {
+          "type": "no address"
+        },
+        "layout": {
+          "functions": []
+        },
+        "feature_counts": {
+          "file": 310,
+          "functions": [
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663297
+              },
+              "count": 12
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663298
+              },
+              "count": 34
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663299
+              },
+              "count": 36
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663300
+              },
+              "count": 8
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663301
+              },
+              "count": 26
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663302
+              },
+              "count": 17
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663303
+              },
+              "count": 13
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663304
+              },
+              "count": 11
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663305
+              },
+              "count": 46
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663306
+              },
+              "count": 8
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663307
+              },
+              "count": 11
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663308
+              },
+              "count": 37
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663309
+              },
+              "count": 21
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663310
+              },
+              "count": 27
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663311
+              },
+              "count": 12
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663312
+              },
+              "count": 8
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663313
+              },
+              "count": 8
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663314
+              },
+              "count": 17
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663315
+              },
+              "count": 8
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663316
+              },
+              "count": 15
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663317
+              },
+              "count": 15
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663318
+              },
+              "count": 22
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663319
+              },
+              "count": 22
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663320
+              },
+              "count": 15
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663321
+              },
+              "count": 4
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663322
+              },
+              "count": 4
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663323
+              },
+              "count": 8
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663324
+              },
+              "count": 25
+            },
+            {
+              "address": {
+                "type": "dn token",
+                "value": 100663325
+              },
+              "count": 8
+            }
+          ]
+        },
+        "library_functions": []
+      }
+    },
+    "rules": {
+      "contains PDB path": {
+        "meta": {
+          "name": "contains PDB path",
+          "namespace": "executable/pe/pdb",
+          "authors": [
+            "moritz.raabe@mandiant.com"
+          ],
+          "scopes": {
+            "static": "file",
+            "dynamic": "file"
+          },
+          "attack": [],
+          "mbc": [],
+          "references": [],
+          "examples": [
+            "464EF2CA59782CE697BC329713698CCC"
+          ],
+          "description": "",
+          "lib": false,
+          "is_subscope_rule": false,
+          "maec": {}
+        },
+        "source": "rule:\r\n  meta:\r\n    name: contains PDB path\r\n    namespace: executable/pe/pdb\r\n    authors:\r\n      - moritz.raabe@mandiant.com\r\n    scopes:\r\n      static: file\r\n      dynamic: file\r\n    examples:\r\n      - 464EF2CA59782CE697BC329713698CCC  # level32.exe\r\n  features:\r\n    - string: /:\\\\.*\\.pdb/\r\n",
+        "matches": [
+          [
+            {
+              "type": "no address"
+            },
+            {
+              "success": true,
+              "node": {
+                "type": "feature",
+                "feature": {
+                  "type": "regex",
+                  "regex": "/:\\\\.*\\.pdb/"
+                }
+              },
+              "children": [],
+              "locations": [
+                {
+                  "type": "file",
+                  "value": 7132
+                }
+              ],
+              "captures": {
+                "D:\\gamesUNITY\\CTF\\Library\\Bee\\artifacts\\1900b0aP.dag\\Assembly-CSharp.pdb": [
+                  {
+                    "type": "file",
+                    "value": 7132
+                  }
+                ]
+              }
+            }
+          ]
+        ]
+      },
+      "compiled to the .NET platform": {
+        "meta": {
+          "name": "compiled to the .NET platform",
+          "namespace": "runtime/dotnet",
+          "authors": [
+            "william.ballenthin@mandiant.com"
+          ],
+          "scopes": {
+            "static": "file",
+            "dynamic": "file"
+          },
+          "attack": [],
+          "mbc": [],
+          "references": [],
+          "examples": [
+            "b9f5bd514485fb06da39beff051b9fdc"
+          ],
+          "description": "",
+          "lib": false,
+          "is_subscope_rule": false,
+          "maec": {}
+        },
+        "source": "rule:\r\n  meta:\r\n    name: compiled to the .NET platform\r\n    namespace: runtime/dotnet\r\n    authors:\r\n      - william.ballenthin@mandiant.com\r\n    scopes:\r\n      static: file\r\n      dynamic: file\r\n    examples:\r\n      - b9f5bd514485fb06da39beff051b9fdc\r\n  features:\r\n    - or:\r\n      - format: dotnet\r\n      - import: mscoree._CorExeMain\r\n      - import: mscoree._corexemain\r\n      - import: mscoree._CorDllMain\r\n      - import: mscoree._cordllmain\r\n",
+        "matches": [
+          [
+            {
+              "type": "no address"
+            },
+            {
+              "success": true,
+              "node": {
+                "type": "statement",
+                "statement": {
+                  "type": "or"
+                }
+              },
+              "children": [
+                {
+                  "success": true,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "format",
+                      "format": "dotnet"
+                    }
+                  },
+                  "children": [],
+                  "locations": [
+                    {
+                      "type": "no address"
+                    }
+                  ],
+                  "captures": {}
+                },
+                {
+                  "success": false,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "import",
+                      "import_": "mscoree._CorExeMain"
+                    }
+                  },
+                  "children": [],
+                  "locations": [],
+                  "captures": {}
+                },
+                {
+                  "success": false,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "import",
+                      "import_": "mscoree._corexemain"
+                    }
+                  },
+                  "children": [],
+                  "locations": [],
+                  "captures": {}
+                },
+                {
+                  "success": false,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "import",
+                      "import_": "mscoree._CorDllMain"
+                    }
+                  },
+                  "children": [],
+                  "locations": [],
+                  "captures": {}
+                },
+                {
+                  "success": false,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "import",
+                      "import_": "mscoree._cordllmain"
+                    }
+                  },
+                  "children": [],
+                  "locations": [],
+                  "captures": {}
+                }
+              ],
+              "locations": [],
+              "captures": {}
+            }
+          ]
+        ]
+      },
+      "(internal) .NET file limitation": {
+        "meta": {
+          "name": "(internal) .NET file limitation",
+          "namespace": "internal/limitation/dynamic",
+          "authors": [
+            "@v1bh475u"
+          ],
+          "scopes": {
+            "static": "file",
+            "dynamic": "file"
+          },
+          "attack": [],
+          "mbc": [],
+          "references": [],
+          "examples": [
+            "2f8a79b12a7a989ac7e5f6ec65050036588a92e65aeb6841e08dc228ff0e21b4_min_archive.zip"
+          ],
+          "description": "This dynamic analysis trace describes a .NET file.\n\ncapa rules are not yet tuned for the .NET runtime, \nso its analysis may be incomplete or misleading.\n",
+          "lib": false,
+          "is_subscope_rule": false,
+          "maec": {}
+        },
+        "source": "rule:\r\n  meta:\r\n    name: (internal) .NET file limitation\r\n    namespace: internal/limitation/dynamic\r\n    authors:\r\n      - \"@v1bh475u\"\r\n    description: |\r\n      This dynamic analysis trace describes a .NET file.\r\n\r\n      capa rules are not yet tuned for the .NET runtime, \r\n      so its analysis may be incomplete or misleading.\r\n    scopes:\r\n      static: file\r\n      dynamic: file\r\n    examples:\r\n      - 2f8a79b12a7a989ac7e5f6ec65050036588a92e65aeb6841e08dc228ff0e21b4_min_archive.zip\r\n  features:\r\n    - or:\r\n      - format: dotnet\r\n      - import: mscoree._CorExeMain\r\n      - import: mscoree._corexemain\r\n      - import: mscoree._CorDllMain\r\n      - import: mscoree._cordllmain\r\n",
+        "matches": [
+          [
+            {
+              "type": "no address"
+            },
+            {
+              "success": true,
+              "node": {
+                "type": "statement",
+                "statement": {
+                  "type": "or"
+                }
+              },
+              "children": [
+                {
+                  "success": true,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "format",
+                      "format": "dotnet"
+                    }
+                  },
+                  "children": [],
+                  "locations": [
+                    {
+                      "type": "no address"
+                    }
+                  ],
+                  "captures": {}
+                },
+                {
+                  "success": false,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "import",
+                      "import_": "mscoree._CorExeMain"
+                    }
+                  },
+                  "children": [],
+                  "locations": [],
+                  "captures": {}
+                },
+                {
+                  "success": false,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "import",
+                      "import_": "mscoree._corexemain"
+                    }
+                  },
+                  "children": [],
+                  "locations": [],
+                  "captures": {}
+                },
+                {
+                  "success": false,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "import",
+                      "import_": "mscoree._CorDllMain"
+                    }
+                  },
+                  "children": [],
+                  "locations": [],
+                  "captures": {}
+                },
+                {
+                  "success": false,
+                  "node": {
+                    "type": "feature",
+                    "feature": {
+                      "type": "import",
+                      "import_": "mscoree._cordllmain"
+                    }
+                  },
+                  "children": [],
+                  "locations": [],
+                  "captures": {}
+                }
+              ],
+              "locations": [],
+              "captures": {}
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "MITRE": [],
+  "CWE": [],
+  "suricata_rule": "",
+  "yara_rule": "rule AutoGen_69db8900 : Malware { meta: description = \"Auto-generated YARA rule based on API usage\" author      = \"YARRAI AutoGen\" date        = \"2025-07-14\" md5         = \"69db89007fce1ae6aae0c59d45bdebf2\" sha256      = \"d1a0315869aa9652d440a5c990602d1cee90f538a218a28e35d729386a4ea39a\"  strings: /* no API extracted */  condition: uint16(0) == 0x5A4D }"
+}
