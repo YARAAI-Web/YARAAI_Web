@@ -194,15 +194,16 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     with open(meta_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     section_map = {
-        1: "❶ 요약",
-        2: "❷ 정적 분석",
-        3: "❸ 동적 분석",
-        4: "❹ 인터랙티브 그래프(call graph)",
-        5: "❺ MITRE ATT&CK 매핑",
-        6: "❻  CWE 기반 보안 권고",
-    }
+    1: "① Information",
+    2: "② 정적 분석",
+    3: "③ 동적 분석",
+    4: "④ Call Graph",
+    5: "⑤ 클러스터링",
+    6: "⑥ MITRE ATT&CK",
+    7: "⑦ CWE",
+    }   
     SECTION_PROMPTS = {
-    1: f"""① 요약
+    1: f"""① Information
 - 다음 정보를 포함한 요약 리포트 5줄 이상으로 자연어 처리
 {data['MITRE'][:3]}, {data['get_metadata'].get('module', '')}""",
 
@@ -228,20 +229,23 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 - 파일 생성/수정/삭제 이벤트 확인
 - 위 행위들의 로그를 시간대별로 정리""",
 
-    4: f"""④ 인터랙티브 Call Graph
+    4: f"""④ Call Graph
 - 함수 호출 관계를 시각적으로 표현한 HTML 파일 생성됨
 - 분석가가 내부 로직 흐름을 빠르게 파악할 수 있음""",
 
-    5: f"""⑤ MITRE ATT&CK 매핑
-- 감지된 기술: {', '.join(data['MITRE'])}
-- 제공된 각 기술에 대한 설명을 자연어 처리해서 제공. 예를 들어 T1082 : "System Information Discovery"는 시스템 정보를 수집하는 기술로, 공격자가 시스템의 구성 요소를 이해하고 취약점을 찾는 데 사용됨." 이런 형식으로 설명해주세요.
-{data['MITRE']}""",
+    5: f"""⑤ 클러스터링
+- 유사한 악성코드 샘플들을 클러스터링하여 그룹화""",
 
-    6: f"""(1) 탐지된 행위별로 해당하는 CWE ID를 매핑한 후 각 CWE에 대한 설명과 저 1000.csv 에 어떤 기준으로 매핑한 건지 자연어 처리 
+    6: f"""⑤ MITRE ATT&CK 매핑
+- 감지된 기술: {data['MITRE']}
+- 제공된 각 기술에 대한 설명을 자연어 처리해서 제공. 예를 들어 T1082 : "System Information Discovery"는 시스템 정보를 수집하는 기술로, 공격자가 시스템의 구성 요소를 이해하고 취약점을 찾는 데 사용됨." 이런 형식으로 설명해주세요.
+""",
+
+    7: f"""(1) 탐지된 행위별로 해당하는 CWE ID를 매핑한 후 각 CWE에 대한 설명과 저 1000.csv 에 어떤 기준으로 매핑한 건지 자연어 처리 
     예를 들어 CWE-785: "use of path manipulation function without maximum-sized buffer"는 경로 조작 함수 사용 시 출력 버퍼 크기를 충분히 지정하지 않아 버퍼 오버플로우 등의 취약점으로 이어질 수 있는 경우에 해당함. 이런 형식으로 작성해주세요.
 {format_cwe(data['CWE'])}"""
 }
-
+    
     section_title = section_map.get(req.sectionId)
     prompt_body   = SECTION_PROMPTS.get(req.sectionId)
     if not section_title or not prompt_body:

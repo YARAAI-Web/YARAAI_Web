@@ -27,12 +27,13 @@ interface AnalysisResult {
 }
 
 const SECTIONS = [
-  '❶ 요약',
-  '❷ 정적 분석',
-  '❸ 동적 분석',
-  '❹ 인터랙티브 그래프(call graph)',
-  '❺ MITRE ATT&CK 매핑',
-  '❻  CWE 기반 보안 권고',
+    "① Information",
+    "② 정적 분석",
+    "③ 동적 분석",
+    "④ Call Graph",
+    "⑤ 클러스터링",
+    "⑥ MITRE ATT&CK",
+    "⑦ CWE"
 ]
 
 export default function AnalysisPage() {
