@@ -12,7 +12,6 @@ from .c_h_run import analyze_file as run_analysis, OUTPUT_DIR
 from .extract_pe_headers import extract_headers
 from .CAPA import map_mitre
 from .CWE.map_CWE import analyze_code_with_cwe
-import psutil
 
 # IDA 및 MCP 설정
 IDA_PATH   = r"C:\Program Files\IDA Professional 9.1\ida.exe"

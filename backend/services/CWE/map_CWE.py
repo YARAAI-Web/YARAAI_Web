@@ -22,7 +22,7 @@ def match_keywords_to_cwe(code_lines, cwe_name_map):
     for name, (cwe_id, mitigation) in cwe_name_map.items():
         keywords = name.split()
         match_score = sum(1 for word in keywords if word in code_text)
-        if len(keywords) > 0 and (match_score / len(keywords)) >= 0.55:
+        if len(keywords) > 0 and (match_score / len(keywords)) >= 0.85:
             matched.append((name, cwe_id, mitigation))
     return matched
 

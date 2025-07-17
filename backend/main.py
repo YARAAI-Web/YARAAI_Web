@@ -203,11 +203,13 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     7: "⑦ CWE",
     }   
     SECTION_PROMPTS = {
-    1: f"""① Information
+    1: f"""
+① Information
 - 다음 정보를 포함한 요약 리포트 5줄 이상으로 자연어 처리
 {data['MITRE'][:3]}, {data['get_metadata'].get('module', '')}""",
 
-    2: f"""② 정적 분석
+    2: f"""
+② 정적 분석
 (1) 파일 정보
 - 형식: {data['get_metadata'].get('fileType', '')}
 - 크기: {data['get_metadata'].get('fileSize', '')} bytes
@@ -223,27 +225,39 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 - 룰 수: {len(data['yara_rules']) if isinstance(data['yara_rules'], list) else 1}
 - 커버리지 평가: 추후 반영 필요""",
 
-    3: f"""③ 동적 분석
+    3: f"""
+③ 동적 분석
 - 악성코드 실행 시 생성된 프로세스 정보 확인
 - 레지스트리 키 조작 여부 확인
 - 파일 생성/수정/삭제 이벤트 확인
 - 위 행위들의 로그를 시간대별로 정리""",
 
-    4: f"""④ Call Graph
+    4: f"""
+④ Call Graph
 - 함수 호출 관계를 시각적으로 표현한 HTML 파일 생성됨
 - 분석가가 내부 로직 흐름을 빠르게 파악할 수 있음""",
 
-    5: f"""⑤ 클러스터링
+    5: f"""
+⑤ 클러스터링
 - 유사한 악성코드 샘플들을 클러스터링하여 그룹화""",
 
-    6: f"""⑤ MITRE ATT&CK 매핑
+    6: f"""
+⑥ MITRE ATT&CK 매핑
 - 감지된 기술: {data['MITRE']}
-- 제공된 각 기술에 대한 설명을 자연어 처리해서 제공. 예를 들어 T1082 : "System Information Discovery"는 시스템 정보를 수집하는 기술로, 공격자가 시스템의 구성 요소를 이해하고 취약점을 찾는 데 사용됨." 이런 형식으로 설명해주세요.
+- 제공된 각 기술에 대한 설명을 예를 들어 \n- [T1082] "System Information Discovery"는 시스템 정보를 수집하는 기술로, 공격자가 시스템의 구성 요소를 이해하고 취약점을 찾는 데 사용됨. 으로 각 공격마다 한 줄 씩 작성.
+- 마지막으로, 각 기술들을 종합해 동작과정을 **자세히** 설명하며 마무리.
+- 보고서 형식으로 작성
+Make sure to think step-by-step when answering.
 """,
 
-    7: f"""(1) 탐지된 행위별로 해당하는 CWE ID를 매핑한 후 각 CWE에 대한 설명과 저 1000.csv 에 어떤 기준으로 매핑한 건지 자연어 처리 
-    예를 들어 CWE-785: "use of path manipulation function without maximum-sized buffer"는 경로 조작 함수 사용 시 출력 버퍼 크기를 충분히 지정하지 않아 버퍼 오버플로우 등의 취약점으로 이어질 수 있는 경우에 해당함. 이런 형식으로 작성해주세요.
-{format_cwe(data['CWE'])}"""
+    7: f"""
+⑦ CWE 매핑
+- 매핑된 CWE ID를 각 CWE에 대한 설명과 저 1000.csv 에 어떤 기준으로 매핑한 건지 자연어 처리: {format_cwe(data['CWE'])}
+- 제공된 각 기술에 대한 설명을 예를 들어 \n- [CWE-785] "use of path manipulation function without maximum-sized buffer"는 경로 조작 함수 사용 시 출력 버퍼 크기를 충분히 지정하지 않아 버퍼 오버플로우 등의 취약점으로 이어질 수 있는 경우에 해당함. 으로 각 공격마다 한 줄 씩 작성.
+- 마지막으로, 각 기술들을 종합해 동작과정을 **자세히** 설명하며 마무리.
+- 보고서 형식으로 작성
+Make sure to think step-by-step when answering.
+"""
 }
     
     section_title = section_map.get(req.sectionId)
@@ -257,11 +271,9 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 출력은 반드시 **마크다운 형식 없이**, 일반 텍스트만 사용하여 작성해주세요. 
 제공한 정보 이외의 내용들을 출력하지 마세요. 
 정확하고 구체적인 문장으로 최대한 풀어써주세요. 
-초등학생들도 알 수 있게 작성해주세요.
 문체를 “~함”으로 통일해주세요.
 표준 용어(IOC, TTP, MITRE ATT&CK) 사용해주세요
-객관적이고 중립적인 어조를 사용해주세요
-Make sure to think step-by-step when answering. 
+객관적이고 중립적인 어조를 사용해주세요 
 
 <분석 대상 개요>
 - 파일명: {meta.get("module","")}
@@ -274,7 +286,7 @@ Make sure to think step-by-step when answering.
 """
     try:
         resp = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=[{"role":"user","content":prompt}],
             max_tokens=1024,
             temperature=0.7
