@@ -11,7 +11,7 @@ export default function Header() {
   return (
     <header className="w-full bg-white">
       {/* ──── 로고 + 히스토리 버튼 컨테이너 ──── */}
-      <div className="mx-auto max-w-5xl flex items-center justify-between px-8 py-4">
+      <div className="mx-auto max-w-5xl flex items-center justify-between px-[10px] py-4">
         <img
           src={Logo}
           alt="YARAAI"
@@ -23,6 +23,7 @@ export default function Header() {
           type="button"
           onClick={() => navigate('/history')}
           className="
+            mr-[30px]
             relative
             text-[1.2rem] font-medium text-gray-900
             bg-transparent border-0 appearance-none p-0

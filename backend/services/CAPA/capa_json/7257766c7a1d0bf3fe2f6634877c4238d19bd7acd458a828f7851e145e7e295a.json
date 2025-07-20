@@ -1,20 +1,20 @@
 {
   "meta": {
-    "timestamp": "2025-07-14T05:03:15.462578",
+    "timestamp": "2025-07-20T19:29:33.706140",
     "version": "9.2.1",
     "argv": [
       "-r",
-      "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web\\backend\\services\\CAPA\\capa-rules",
+      "F:\\users\\WhiteHat\\YARRAAI\\code\\YARAAI_Web\\backend\\services\\CAPA\\capa-rules",
       "-s",
-      "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web\\backend\\services\\CAPA\\capa-sigs",
+      "F:\\users\\WhiteHat\\YARRAAI\\code\\YARAAI_Web\\backend\\services\\CAPA\\capa-sigs",
       "--json",
-      "F:\\users\\WhiteHat\\YARRAAI\\code\\YARRAI_Web\\backend\\uploads\\8b3cb907-3f52-470c-9845-1ddd74c05eb8.exe"
+      "F:\\users\\WhiteHat\\YARRAAI\\code\\YARAAI_Web\\backend\\uploads\\6c3c9d20-8f2e-4595-addc-eb1391006274.exe"
     ],
     "sample": {
       "md5": "5a75d0870cf22d2e8cdf8cbc31fad3f1",
       "sha1": "7b650488f71172a3d0be1c9fb4f26869245b0c5e",
       "sha256": "7257766c7a1d0bf3fe2f6634877c4238d19bd7acd458a828f7851e145e7e295a",
-      "path": "F:/users/WhiteHat/YARRAAI/code/YARRAI_Web/backend/uploads/8b3cb907-3f52-470c-9845-1ddd74c05eb8.exe"
+      "path": "F:/users/WhiteHat/YARRAAI/code/YARAAI_Web/backend/uploads/6c3c9d20-8f2e-4595-addc-eb1391006274.exe"
     },
     "flavor": "static",
     "analysis": {
@@ -23,7 +23,7 @@
       "os": "windows",
       "extractor": "VivisectFeatureExtractor",
       "rules": [
-        "F:/users/WhiteHat/YARRAAI/code/YARRAI_Web/backend/services/CAPA/capa-rules"
+        "F:/users/WhiteHat/YARRAAI/code/YARAAI_Web/backend/services/CAPA/capa-rules"
       ],
       "base_address": {
         "type": "absolute",

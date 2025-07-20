@@ -5,6 +5,7 @@ import json
 import subprocess
 import time
 import psutil
+import hashlib
 from typing import Any, Dict
 
 from .mcp_collector import mcp_run
@@ -12,6 +13,8 @@ from .c_h_run import analyze_file as run_analysis, OUTPUT_DIR
 from .extract_pe_headers import extract_headers
 from .CAPA import map_mitre
 from .CWE.map_CWE import analyze_code_with_cwe
+# Virustotal 연동
+from services.virustotal import get_vt_data
 
 # IDA 및 MCP 설정
 IDA_PATH   = r"C:\Program Files\IDA Professional 9.1\ida.exe"
@@ -46,7 +49,7 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     # 1) PE 헤더 추출
     try:
         pe_hdr = extract_headers(file_path)
-    except:
+    except Exception:
         pe_hdr = {}
     print("➤ PE headers extracted")
 
@@ -64,7 +67,6 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     yara_rules = ch_data.get("yara_rules", "")
     print("➤ YARA rules extracted")
 
-
     # 3) CAPA 룰 매핑
     capa_output    = map_mitre.map_mitre(file_path)
     capa_json_path = capa_output[0]
@@ -81,9 +83,18 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
         json.dump(capa_rules, f, ensure_ascii=False, indent=2)
     print(f"➤ Dumped CAPA JSON to {target_capa_dump}")
 
+    # CWE 분석
     CWE = analyze_code_with_cwe(ch_data)
 
-    # 5) 최종 리포트 조립
+    # 5) Virustotal API 호출
+    try:
+        vt_data = get_vt_data(sha256)
+        print("➤ Virustotal data fetched")
+    except Exception as e:
+        print(f"❌ Virustotal API error: {e}")
+        vt_data = {}
+
+    # 6) 최종 리포트 조립
     report: Dict[str, Any] = {
         "get_metadata":         mcp['get_metadata'],
         "get_current_address":  mcp['get_current_address'],
@@ -92,15 +103,14 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
         "file_entropy":         mcp['file_entropy'],
         "string_stats":         mcp['string_stats'],
         "pe_headers":           pe_hdr,
-        "virustotal":           ch_data.get("virustotal", {}),
+        "virustotal":           vt_data,
         "c_code":               ch_data.get("c_code", []),
         "h_code":               ch_data.get("h_code", []),
         "summary":              summary,
         "yara_rules":           yara_rules,
         "capa_rules":           capa_rules,
-
         "MITRE":                mitre_mapping,
         "CWE":                  CWE
     }
-
+    
     return report

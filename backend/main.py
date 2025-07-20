@@ -205,8 +205,27 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
     SECTION_PROMPTS = {
     1: f"""
 ① Information
-- 다음 정보를 포함한 요약 리포트 5줄 이상으로 자연어 처리
-{data['MITRE'][:3]}, {data['get_metadata'].get('module', '')}""",
+- 다음 정보를 포함한 요약 리포트를 5줄 이상으로 자연어 처리
+  • MITRE ATT&CK 기술 (처음 3개): {data['MITRE'][:3]}
+  • 모듈명: {data['get_metadata'].get('module', '')}
+  • SHA-256: {data['get_metadata'].get('sha256', '')}
+
+<VirusTotal 상세 정보>
+- MD5: {data['virustotal']['hashes']['md5']}
+- SHA-1: {data['virustotal']['hashes'].get('sha1', '—')}
+- SHA-256: {data['virustotal']['hashes']['sha256']}
+- Vhash: {data['virustotal']['hashes'].get('vhash', '—')}
+- File type: {data['virustotal']['file_type']}
+- Magic: {data['virustotal']['magic']}
+- File size: {data['virustotal']['file_size']} bytes
+- TrID 상위 3개: {', '.join(f"{t['file_type']} ({t['probability']}%)" for t in data['virustotal'].get('trid', [])[:3])}
+- Detect It Easy: {data['virustotal']['analysis'].get('detectiteasy', {}).get('result', '—')}
+- Magika: {data['virustotal']['analysis'].get('magika', {}).get('result', '—')}
+- Packer: {data['virustotal'].get('packer', '—')}
+
+위 정보를 참고하여 **파일의 기본 속성(해시·파일타입·매직·크기)과  
+백신 엔진별 탐지 결과**를 자연어로 요약해 설명해주세요.
+""",
 
     2: f"""
 ② 정적 분석
@@ -302,6 +321,23 @@ Make sure to think step-by-step when answering.
         text = resp.choices[0].message.content.strip()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
+    
+    if req.sectionId == 1:
+        a = f"""
+        <VirusTotal 상세 정보>
+        - MD5: {data['virustotal']['hashes']['md5']}
+        - SHA-1: {data['virustotal']['hashes'].get('sha1', '—')}
+        - SHA-256: {data['virustotal']['hashes']['sha256']}
+        - Vhash: {data['virustotal']['hashes'].get('vhash', '—')}
+        - File type: {data['virustotal']['file_type']}
+        - Magic: {data['virustotal']['magic']}
+        - File size: {data['virustotal']['file_size']} bytes
+        - TrID 상위 3개: {', '.join(f"{t['file_type']} ({t['probability']}%)" for t in data['virustotal'].get('trid', [])[:3])}
+        - Detect It Easy: {data['virustotal']['analysis'].get('detectiteasy', {}).get('result', '—')}
+        - Magika: {data['virustotal']['analysis'].get('magika', {}).get('result', '—')}
+        - Packer: {data['virustotal'].get('packer', '—')}
+        """
+        return JSONResponse(content={"a":a, "text": text})
 
     if req.sectionId == 4:
         filename_base = meta.get("module","").rsplit(".",1)[0]

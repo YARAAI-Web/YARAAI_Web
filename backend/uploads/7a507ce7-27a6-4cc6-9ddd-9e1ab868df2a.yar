@@ -1,1 +1,0 @@
-rule AutoGen_69db8900 : Malware { meta: description = "Auto-generated YARA rule based on API usage" author      = "YARRAI AutoGen" date        = "2025-07-14" md5         = "69db89007fce1ae6aae0c59d45bdebf2" sha256      = "d1a0315869aa9652d440a5c990602d1cee90f538a218a28e35d729386a4ea39a"  strings: /* no API extracted */  condition: uint16(0) == 0x5A4D }

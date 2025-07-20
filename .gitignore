@@ -1,7 +1,10 @@
 # 가상환경 디렉터리
-venv/
-.venv/
-env/
-.env/
-/.env
-backend/.env
+venv\
+.venv\
+env\
+.env\
+\.env
+backend\.env
+backend\uploads
+backend\services\c_h_json
+backend\static\callgraphs

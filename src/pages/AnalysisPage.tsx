@@ -32,13 +32,13 @@ interface AnalysisResult {
 }
 
 const SECTIONS = [
-  "① Information",
-  "② 정적 분석",
-  "③ 동적 분석",
-  "④ Call Graph",
-  "⑤ 클러스터링",
-  "⑥ MITRE ATT&CK",
-  "⑦ CWE"
+  '① Information',
+  '② 정적 분석',
+  '③ 동적 분석',
+  '④ Call Graph',
+  '⑤ 클러스터링',
+  '⑥ MITRE ATT&CK',
+  '⑦ CWE',
 ]
 
 export default function AnalysisPage() {
@@ -93,8 +93,8 @@ export default function AnalysisPage() {
 
       axios
         .get<AnalysisResult>(`/reports/${filename}`)
-        .then(res => setData(res.data))
-        .catch(err => setError(err.response?.data?.detail || err.message))
+        .then((res) => setData(res.data))
+        .catch((err) => setError(err.response?.data?.detail || err.message))
         .finally(() => setLoading(false))
 
       return
@@ -103,7 +103,7 @@ export default function AnalysisPage() {
     let nowStr = new Date().toLocaleString()
     axios
       .get<AnalysisResult>(`/reports/${filename}`)
-      .then(res => {
+      .then((res) => {
         setData(res.data)
         nowStr = new Date().toLocaleString()
         setSubmissionDate(nowStr)
@@ -115,17 +115,17 @@ export default function AnalysisPage() {
                 sectionId: idx + 1,
                 filename,
               })
-              .then(r => r.data.text)
+              .then((r) => r.data.text)
               .catch(() => '(불러오기 실패)')
           })
         )
       })
-      .then(texts => {
+      .then((texts) => {
         setAllTexts(texts)
         sessionStorage.setItem(keySections, JSON.stringify(texts))
         sessionStorage.setItem(keyDate, nowStr)
       })
-      .catch(err => setError(err.response?.data?.detail || err.message))
+      .catch((err) => setError(err.response?.data?.detail || err.message))
       .finally(() => setLoading(false))
   }, [filename, location.state])
 
@@ -196,9 +196,15 @@ export default function AnalysisPage() {
         style={{ position: 'absolute', top: -9999, left: -9999, width: 800 }}
       >
         <div className="header">
-          <div><strong>Name:</strong> {filename}</div>
-          <div><strong>SHA-256:</strong> {data.get_metadata.sha256}</div>
-          <div><strong>Submission Date:</strong> {submissionDate}</div>
+          <div>
+            <strong>Name:</strong> {filename}
+          </div>
+          <div>
+            <strong>SHA-256:</strong> {data.get_metadata.sha256}
+          </div>
+          <div>
+            <strong>Submission Date:</strong> {submissionDate}
+          </div>
         </div>
         {SECTIONS.map((section, idx) => (
           <div key={idx}>
@@ -222,33 +228,75 @@ export default function AnalysisPage() {
       <div className="flex flex-col min-h-screen bg-white">
         {/* 상단 요약 헤더 */}
         <div className="px-8 pt-4 pb-0">
-          <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-2 justify-between items-start">
+          <div className="max-w-5xl mx-auto relative flex bg-white p-2 justify-start items-start gap-6">
             <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md p-2">
               Likely Malicious
             </div>
-            <div className="flex-1 pl-6 space-y-2">
+            <div className="flex-none pl-5 space-y-2 -mt-[3px] -ml-4">
               <div className="space-y-1 text-sm">
-                <div><strong>Name:</strong> {filename}</div>
-                <div><strong>SHA-256:</strong> {data.get_metadata.sha256}</div>
-                <div><strong>Submission Date:</strong> {submissionDate}</div>
+                <div>
+                  <strong>Name:</strong> {filename}
+                </div>
+                <div>
+                  <strong>SHA-256:</strong> {data.get_metadata.sha256}
+                </div>
+                <div>
+                  <strong>Submission Date:</strong> {submissionDate}
+                </div>
               </div>
             </div>
-            <div className="flex flex-col gap-2 ml-4 mt-1">
+            <div className="absolute -top-[20px] right-[30px] flex flex-col space-y-[2px]">
               <button
                 onClick={downloadHTML}
-                className="bg-purple-200 hover:bg-purple-300 px-4 py-2 rounded"
+                className="
+                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                  text-[#FFFFFF]           /* 글자색 흰색 */
+                  font-bold            /* 글자 굵게 */
+                  text-xl              /* 큰 글자 크기 */
+                  transition
+                  px-[20px]                 /* 좌우 여백: 2rem */
+                  py-[7px]                 /* 상하 여백: 1rem */
+                  rounded-full         /* 완전한 pill(캡슐) 모양 */
+                  border-[0.1px]
+                  border-[rgba(0,0,0,0.15)]
+                "
               >
                 Report
               </button>
               <button
                 onClick={downloadJSON}
-                className="bg-blue-200 hover:bg-blue-300 px-4 py-2 rounded"
+                className="
+                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                  text-[#FFFFFF]           /* 글자색 흰색 */
+                  font-bold            /* 글자 굵게 */
+                  text-xl              /* 큰 글자 크기 */
+                  transition
+                  px-[20px]                 /* 좌우 여백: 2rem */
+                  py-[7px]                 /* 상하 여백: 1rem */
+                  rounded-full         /* 완전한 pill(캡슐) 모양 */
+                  border-[0.1px]
+                  border-[rgba(0,0,0,0.15)]
+                "
               >
                 JSON
               </button>
               <button
                 onClick={downloadSuricataJSON}
-                className="bg-green-200 hover:bg-green-300 px-4 py-2 rounded"
+                className="
+                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                  text-[#FFFFFF]           /* 글자색 흰색 */
+                  font-bold            /* 글자 굵게 */
+                  text-xl              /* 큰 글자 크기 */
+                  transition
+                  px-[20px]                 /* 좌우 여백: 2rem */
+                  py-[7px]                 /* 상하 여백: 1rem */
+                  rounded-full         /* 완전한 pill(캡슐) 모양 */
+                  border-[0.1px]
+                  border-[rgba(0,0,0,0.15)]
+                "
               >
                 Suricata
               </button>
@@ -256,9 +304,18 @@ export default function AnalysisPage() {
           </div>
         </div>
 
+        <div
+          style={{
+            height: '1px',
+            backgroundColor: 'rgba(0,0,0,0.15)',
+            margin: '1.5rem 0rem 0rem',
+          }}
+        />
+
         {/* 사이드 네비 + 메인 컨텐츠 */}
-        <div className="flex flex-1 px-8 pt-0 pb-8 gap-6">
-          <nav className="w-[300px] bg-gray-50 flex flex-col h-[calc(100vh-80px)]">
+        <div className=" flex flex-1 px-8 pt-0 pb-8 gap-6">
+          <nav className="relative w-[220px] bg-gray-50 flex flex-col h-[calc(100vh-80px)] border-r-4 border-[#0F3ADA]">
+            <div className="absolute top-0 left-full right-0 h-px bg-gray-300" />
             {SECTIONS.map((label, idx) => (
               <div
                 key={idx}
@@ -272,10 +329,20 @@ export default function AnalysisPage() {
                 {label}
               </div>
             ))}
+            <div
+              className="
+                absolute
+                top-0
+                left-full
+                right-0
+                border-t
+                border-gray-300
+              "
+            />
           </nav>
 
-          <main className="flex-1 overflow-auto p-4 bg-white rounded-xl shadow border-l-4 border-[#0F3ADA]">
-            <h2 className="text-xl font-bold text-[#0F3ADA] mb-4">
+          <main className="flex-1 overflow-auto p-4 bg-white rounded-xl shadow border-l-4 border-[#0F3ADA] pl-[40px] pr-[40px]">
+            <h2 className="text-xl font-bold text-[#0F3ADA] mb-4 tracking-wide">
               {SECTIONS[currentSection]}
             </h2>
 
@@ -288,14 +355,23 @@ export default function AnalysisPage() {
             ) : currentSection === 1 ? (
               <>
                 {/* ② 정적 분석의 본문 */}
-                <pre className="whitespace-pre-wrap">
+                <pre
+                  className="
+                    whitespace-pre-wrap
+                    "
+                  style={{
+                    fontFamily: 'semibold',
+                    fontWeight: 350,
+                    lineHeight: '1.6',
+                  }}
+                >
                   {allTexts[1]}
                 </pre>
 
                 {/* ↘ 여기, 본문 바로 아래에 토글 버튼 */}
                 <div className="mt-4">
                   <button
-                    onClick={() => setShowPeDetails(v => !v)}
+                    onClick={() => setShowPeDetails((v) => !v)}
                     className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
                   >
                     {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
@@ -306,7 +382,7 @@ export default function AnalysisPage() {
                     <div>
                       <strong>Import DLL:</strong>{' '}
                       {Array.isArray(data.pe_headers.imports)
-                        ? data.pe_headers.imports.map(s => s.dll).join(', ')
+                        ? data.pe_headers.imports.map((s) => s.dll).join(', ')
                         : 'N/A'}
                     </div>
                     <div>
@@ -316,18 +392,37 @@ export default function AnalysisPage() {
                     <div>
                       <strong>섹션 정보:</strong>{' '}
                       {Array.isArray(data.pe_headers.sections)
-                        ? data.pe_headers.sections.map(s => s.name).join(', ')
+                        ? data.pe_headers.sections.map((s) => s.name).join(', ')
                         : 'N/A'}
                     </div>
                   </div>
                 )}
               </>
             ) : (
-              <pre className="whitespace-pre-wrap">
+              <pre
+                className="
+                  whitespace-pre-wrap
+                  "
+                style={{
+                  fontFamily: 'semibold',
+                  fontWeight: 350,
+                  lineHeight: '1.6',
+                }}
+              >
                 {allTexts[currentSection]}
               </pre>
             )}
           </main>
+          <div
+            className="
+                absolute 
+                bottom-0         /* 컨테이너(=nav 높이) 바로 아래에 붙음 */
+                left-[300px]     /* nav 너비만큼 들어옴 */
+                right-0          /* 오른쪽 끝까지 */
+                border-t-2 
+                border-gray-300
+              "
+          />
         </div>
       </div>
     </>
