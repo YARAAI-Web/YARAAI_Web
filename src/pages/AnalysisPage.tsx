@@ -17,7 +17,12 @@ interface AnalysisResult {
   get_entry_points: any[]
   file_entropy: number
   string_stats: Record<string, any>
-  pe_headers: Record<string, any>
+  pe_headers: {
+    number_of_sections?: number
+    sections?: { name: string }
+    imports?: { dll: string }
+    [key: string]: any
+  }
   c_code: string[]
   h_code: string[]
   virustotal: Record<string, any>
@@ -27,13 +32,13 @@ interface AnalysisResult {
 }
 
 const SECTIONS = [
-    "① Information",
-    "② 정적 분석",
-    "③ 동적 분석",
-    "④ Call Graph",
-    "⑤ 클러스터링",
-    "⑥ MITRE ATT&CK",
-    "⑦ CWE"
+  "① Information",
+  "② 정적 분석",
+  "③ 동적 분석",
+  "④ Call Graph",
+  "⑤ 클러스터링",
+  "⑥ MITRE ATT&CK",
+  "⑦ CWE"
 ]
 
 export default function AnalysisPage() {
@@ -51,6 +56,7 @@ export default function AnalysisPage() {
     Array(SECTIONS.length).fill('로딩 중…')
   )
   const htmlRef = useRef<HTMLDivElement>(null)
+  const [showPeDetails, setShowPeDetails] = useState(false)
 
   useEffect(() => {
     if (!rawFilename) {
@@ -87,8 +93,8 @@ export default function AnalysisPage() {
 
       axios
         .get<AnalysisResult>(`/reports/${filename}`)
-        .then((res) => setData(res.data))
-        .catch((err) => setError(err.response?.data?.detail || err.message))
+        .then(res => setData(res.data))
+        .catch(err => setError(err.response?.data?.detail || err.message))
         .finally(() => setLoading(false))
 
       return
@@ -97,7 +103,7 @@ export default function AnalysisPage() {
     let nowStr = new Date().toLocaleString()
     axios
       .get<AnalysisResult>(`/reports/${filename}`)
-      .then((res) => {
+      .then(res => {
         setData(res.data)
         nowStr = new Date().toLocaleString()
         setSubmissionDate(nowStr)
@@ -109,17 +115,17 @@ export default function AnalysisPage() {
                 sectionId: idx + 1,
                 filename,
               })
-              .then((r) => r.data.text)
+              .then(r => r.data.text)
               .catch(() => '(불러오기 실패)')
           })
         )
       })
-      .then((texts) => {
+      .then(texts => {
         setAllTexts(texts)
         sessionStorage.setItem(keySections, JSON.stringify(texts))
         sessionStorage.setItem(keyDate, nowStr)
       })
-      .catch((err) => setError(err.response?.data?.detail || err.message))
+      .catch(err => setError(err.response?.data?.detail || err.message))
       .finally(() => setLoading(false))
   }, [filename, location.state])
 
@@ -163,7 +169,7 @@ export default function AnalysisPage() {
 
   const downloadHTML = () => {
     if (!htmlRef.current) return
-    const html = `<!DOCTYPE html><html lang=\"ko\"><head><meta charset=\"UTF-8\"/><title>보고서 - ${baseName}</title><style>
+    const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><title>보고서 - ${baseName}</title><style>
       body{font-family:sans-serif;padding:20px}
       .header{border:2px solid #000;padding:6px;margin-bottom:10px}
       h2{color:#0F3ADA;margin-top:30px}
@@ -190,20 +196,14 @@ export default function AnalysisPage() {
         style={{ position: 'absolute', top: -9999, left: -9999, width: 800 }}
       >
         <div className="header">
-          <div>
-            <strong>Name:</strong> {filename}
-          </div>
-          <div>
-            <strong>SHA-256:</strong> {data.get_metadata.sha256}
-          </div>
-          <div>
-            <strong>Submission Date:</strong> {submissionDate}
-          </div>
+          <div><strong>Name:</strong> {filename}</div>
+          <div><strong>SHA-256:</strong> {data.get_metadata.sha256}</div>
+          <div><strong>Submission Date:</strong> {submissionDate}</div>
         </div>
         {SECTIONS.map((section, idx) => (
           <div key={idx}>
             <h2>{section}</h2>
-            {idx === 2 ? (
+            {idx === 3 ? (
               <div className="iframe-container">
                 <iframe
                   src={`${window.location.origin}/static/callgraphs/${baseName}.html`}
@@ -220,6 +220,7 @@ export default function AnalysisPage() {
 
       {/* 실제 화면 UI */}
       <div className="flex flex-col min-h-screen bg-white">
+        {/* 상단 요약 헤더 */}
         <div className="px-8 pt-4 pb-0">
           <div className="max-w-5xl mx-auto flex bg-white border shadow rounded-lg p-2 justify-between items-start">
             <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md p-2">
@@ -227,15 +228,9 @@ export default function AnalysisPage() {
             </div>
             <div className="flex-1 pl-6 space-y-2">
               <div className="space-y-1 text-sm">
-                <div>
-                  <strong>Name:</strong> {filename}
-                </div>
-                <div>
-                  <strong>SHA-256:</strong> {data.get_metadata.sha256}
-                </div>
-                <div>
-                  <strong>Submission Date:</strong> {submissionDate}
-                </div>
+                <div><strong>Name:</strong> {filename}</div>
+                <div><strong>SHA-256:</strong> {data.get_metadata.sha256}</div>
+                <div><strong>Submission Date:</strong> {submissionDate}</div>
               </div>
             </div>
             <div className="flex flex-col gap-2 ml-4 mt-1">
@@ -261,7 +256,8 @@ export default function AnalysisPage() {
           </div>
         </div>
 
-        <div className="flex flex-1 px-8 pt-0 pb-8 gap-6 -mt-1000">
+        {/* 사이드 네비 + 메인 컨텐츠 */}
+        <div className="flex flex-1 px-8 pt-0 pb-8 gap-6">
           <nav className="w-[300px] bg-gray-50 flex flex-col h-[calc(100vh-80px)]">
             {SECTIONS.map((label, idx) => (
               <div
@@ -282,12 +278,50 @@ export default function AnalysisPage() {
             <h2 className="text-xl font-bold text-[#0F3ADA] mb-4">
               {SECTIONS[currentSection]}
             </h2>
+
             {currentSection === 3 ? (
               <iframe
                 src={`/static/callgraphs/${baseName}.html`}
                 className="w-full h-[800px] border-none rounded"
                 sandbox="allow-scripts allow-same-origin"
               />
+            ) : currentSection === 1 ? (
+              <>
+                {/* ② 정적 분석의 본문 */}
+                <pre className="whitespace-pre-wrap">
+                  {allTexts[1]}
+                </pre>
+
+                {/* ↘ 여기, 본문 바로 아래에 토글 버튼 */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowPeDetails(v => !v)}
+                    className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+                  >
+                    {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
+                  </button>
+                </div>
+                {showPeDetails && (
+                  <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
+                    <div>
+                      <strong>Import DLL:</strong>{' '}
+                      {Array.isArray(data.pe_headers.imports)
+                        ? data.pe_headers.imports.map(s => s.dll).join(', ')
+                        : 'N/A'}
+                    </div>
+                    <div>
+                      <strong>섹션 개수:</strong>{' '}
+                      {data.pe_headers.number_of_sections ?? 'N/A'}
+                    </div>
+                    <div>
+                      <strong>섹션 정보:</strong>{' '}
+                      {Array.isArray(data.pe_headers.sections)
+                        ? data.pe_headers.sections.map(s => s.name).join(', ')
+                        : 'N/A'}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <pre className="whitespace-pre-wrap">
                 {allTexts[currentSection]}

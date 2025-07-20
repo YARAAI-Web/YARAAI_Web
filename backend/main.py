@@ -210,20 +210,28 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 
     2: f"""
 ② 정적 분석
-(1) 파일 정보
-- 형식: {data['get_metadata'].get('fileType', '')}
-- 크기: {data['get_metadata'].get('fileSize', '')} bytes
 
-(2) 패킹 여부
-- 엔트로피: {data['file_entropy']}
+(1) PE 헤더 정보
+- 형식: {data['pe_headers'].get('file_type', '')} {data['pe_headers'].get('machine', '')} - 다음 정보 pe 파일 포맷의 특성파트에서 가져온건데 이거 숫자가 아니라 파일 형식으로 바꿔줘
+- 크기: {data['get_metadata'].get('size', '')} bytes
+- 섹션 목록: {', '.join([s.get('name', '') for s in data['pe_headers'].get('sections', [])])}
+
+(2) 문자열 (Strings)
+- 총 문자열 수: {data["string_stats"].get('string_count', '')}
+- 탐지된 C&C 문자열(도메인/URL 포함): 추후 정제 필요 (예: .com, http 등 포함된 문자열에서 추출 가능)
+
+(3) Entry Point 지점
+- Entry Point Address: {data.get('get_entry_points') and data['get_entry_points'][0].get('address', '')}
+- Entry Point Name: {data.get('get_entry_points') and data['get_entry_points'][0].get('name', '')}
+
+(4) 난독화 및 패킹 여부
+- 섹션 엔트로피 평균: {data['file_entropy']}
 - 패커 탐지 결과: 추후 반영 필요
 
-(3) Import 함수
-- 주요 예시: {', '.join(data['pe_headers'].get('imports', []))}
-
-(4) YARA 룰 매칭
-- 룰 수: {len(data['yara_rules']) if isinstance(data['yara_rules'], list) else 1}
-- 커버리지 평가: 추후 반영 필요""",
+(5) YARA 룰 매칭
+- 탐지된 룰 수: {len(data['yara_rules']) if isinstance(data['yara_rules'], list) else 1}
+- 커버리지 및 설명: 추후 반영 필요
+""",
 
     3: f"""
 ③ 동적 분석
