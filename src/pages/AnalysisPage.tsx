@@ -420,9 +420,13 @@ export default function AnalysisPage() {
                 {/* 2) GPT 요약 */}
                 <pre
                   className="whitespace-pre-wrap"
-                  style={{ lineHeight: 1.6 }}
+                  style={{
+                    fontFamily: 'semibold', // 다른 섹션과 동일
+                    fontWeight: 350,
+                    lineHeight: '1.6',
+                  }}
                 >
-                  {allTexts[0].split('===VirusTotal INFO START===')[0].trim()}
+                  {allTexts[0].split('<VirusTotal')[0].trim()}
                 </pre>
               </>
             ) : currentSection === 1 ? (
