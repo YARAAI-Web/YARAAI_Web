@@ -1,3 +1,0 @@
-{
-  "suricata_rule": "alert tcp any any -> any any (\n    msg:\"Auto-generated Suricata rule from YARA\";\n    flow:established,to_server;\n    content:\"ADMQCMD\"; nocase;\n    threshold:type limit, track by_src, count 1, seconds 60;\n    sid:1029298; rev:1;\n)"
-}
