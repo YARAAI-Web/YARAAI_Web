@@ -1,19 +1,15 @@
 # 가상환경 디렉터리
-<<<<<<< HEAD
-venv\
-.venv\
-env\
-.env\
-\.env
-backend\.env
-=======
 venv/
 .venv/
 env/
-.env/
-/.env
+.env
 backend/.env
->>>>>>> 25eecf57a2ef12a2b82bb808788a928e93d30c27
-backend\uploads
-backend\services\c_h_json
-backend\static\callgraphs
+
+# 업로드된 파일
+backend/uploads/
+
+# 전처리 JSON
+backend/services/c_h_json/
+
+# CallGraph 정적 파일
+backend/static/callgraphs/
