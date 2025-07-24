@@ -323,21 +323,11 @@ Make sure to think step-by-step when answering.
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
     
     if req.sectionId == 1:
-        a = f"""
-        <VirusTotal 상세 정보>
-        - MD5: {data['virustotal']['hashes']['md5']}
-        - SHA-1: {data['virustotal']['hashes'].get('sha1', '—')}
-        - SHA-256: {data['virustotal']['hashes']['sha256']}
-        - Vhash: {data['virustotal']['hashes'].get('vhash', '—')}
-        - File type: {data['virustotal']['file_type']}
-        - Magic: {data['virustotal']['magic']}
-        - File size: {data['virustotal']['file_size']} bytes
-        - TrID 상위 3개: {', '.join(f"{t['file_type']} ({t['probability']}%)" for t in data['virustotal'].get('trid', [])[:3])}
-        - Detect It Easy: {data['virustotal']['analysis'].get('detectiteasy', {}).get('result', '—')}
-        - Magika: {data['virustotal']['analysis'].get('magika', {}).get('result', '—')}
-        - Packer: {data['virustotal'].get('packer', '—')}
-        """
-        return JSONResponse(content={"a":a, "text": text})
+        # Information 섹션: GPT 요약 텍스트와 virustotal 객체만 반환
+        return JSONResponse(content={
+            "text": text,
+            "virustotal": data["virustotal"]
+        })
 
     if req.sectionId == 4:
         filename_base = meta.get("module","").rsplit(".",1)[0]
@@ -368,7 +358,7 @@ def get_capa_report(req: CapaRequest = Body(...)):
 """
     try:
         resp = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4.o",
             messages=[
                 {"role":"system","content":"당신은 숙련된 악성코드 분석가입니다。"},
                 {"role":"user","content":prompt}

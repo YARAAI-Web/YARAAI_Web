@@ -352,6 +352,79 @@ export default function AnalysisPage() {
                 className="w-full h-[800px] border-none rounded"
                 sandbox="allow-scripts allow-same-origin"
               />
+            ) : currentSection === 0 ? (
+              /* ① Information */
+              <>
+                {/* 1) VirusTotal 테이블 */}
+                <table className="vt-table mt-4">
+                  <tbody>
+                    <tr>
+                      <th>MD5</th>
+                      <td>{data.virustotal.hashes.md5}</td>
+                    </tr>
+                    <tr>
+                      <th>SHA-1</th>
+                      <td>{data.virustotal.hashes.sha1 ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>SHA-256</th>
+                      <td>{data.virustotal.hashes.sha256}</td>
+                    </tr>
+                    <tr>
+                      <th>Vhash</th>
+                      <td>{data.virustotal.hashes.vhash ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>File type</th>
+                      <td>{data.virustotal.file_type}</td>
+                    </tr>
+                    <tr>
+                      <th>Magic</th>
+                      <td>{data.virustotal.magic}</td>
+                    </tr>
+                    <tr>
+                      <th>File size</th>
+                      <td>
+                        {data.virustotal.file_size.toLocaleString()} bytes
+                      </td>
+                    </tr>
+                    {data.virustotal.trid && (
+                      <tr>
+                        <th>TrID 상위 3개</th>
+                        <td>
+                          {data.virustotal.trid
+                            .slice(0, 3)
+                            .map(
+                              (t: any) => `${t.file_type} (${t.probability}%)`
+                            )
+                            .join(', ')}
+                        </td>
+                      </tr>
+                    )}
+                    <tr>
+                      <th>DetectItEasy</th>
+                      <td>
+                        {data.virustotal.analysis.detectiteasy?.result ?? '—'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Magika</th>
+                      <td>{data.virustotal.analysis.magika?.result ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>Packer</th>
+                      <td>{data.virustotal.packer ?? '—'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                {/* 2) GPT 요약 */}
+                <pre
+                  className="whitespace-pre-wrap"
+                  style={{ lineHeight: 1.6 }}
+                >
+                  {allTexts[0].split('===VirusTotal INFO START===')[0].trim()}
+                </pre>
+              </>
             ) : currentSection === 1 ? (
               <>
                 {/* ② 정적 분석의 본문 */}
