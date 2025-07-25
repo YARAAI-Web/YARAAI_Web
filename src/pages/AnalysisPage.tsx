@@ -37,9 +37,8 @@ const SECTIONS = [
   '② 정적 분석',
   '③ 동적 분석',
   '④ Call Graph',
-  '⑤ 클러스터링',
-  '⑥ MITRE ATT&CK',
-  '⑦ CWE',
+  '⑤ MITRE ATT&CK',
+  '⑥ CWE',
 ]
 
 export default function AnalysisPage() {
