@@ -1,4 +1,4 @@
-// AnalysisPage.tsx (전체 코드)
+// src\pages\AnalysisPage.tsx
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
@@ -20,8 +20,8 @@ interface AnalysisResult {
   string_stats: Record<string, any>
   pe_headers: {
     number_of_sections?: number
-    sections?: { name: string }[]
-    imports?: { dll: string }[]
+    sections?: { name: string }
+    imports?: { dll: string }
     [key: string]: any
   }
   c_code: string[]
@@ -37,9 +37,8 @@ const SECTIONS = [
   '② 정적 분석',
   '③ 동적 분석',
   '④ Call Graph',
-  '⑤ 클러스터링',
-  '⑥ MITRE ATT&CK',
-  '⑦ CWE',
+  '⑤ MITRE ATT&CK',
+  '⑥ CWE',
 ]
 
 export default function AnalysisPage() {
@@ -58,18 +57,6 @@ export default function AnalysisPage() {
   )
   const htmlRef = useRef<HTMLDivElement>(null)
   const [showPeDetails, setShowPeDetails] = useState(false)
-
-  const waitForDynamicReport = async (uuid: string, timeout = 120000): Promise<boolean> => {
-    const start = Date.now()
-    while (Date.now() - start < timeout) {
-      try {
-        const res = await axios.get(`/reports/${uuid}`)
-        if (res?.data?.get_metadata?.sha256) return true
-      } catch {}
-      await new Promise(r => setTimeout(r, 5000))
-    }
-    return false
-  }
 
   useEffect(() => {
     if (!rawFilename) {
@@ -114,11 +101,8 @@ export default function AnalysisPage() {
     }
 
     let nowStr = new Date().toLocaleString()
-    waitForDynamicReport(filename)
-      .then((ok) => {
-        if (!ok) throw new Error('report.json 생성 실패')
-        return axios.get<AnalysisResult>(`/reports/${filename}`)
-      })
+    axios
+      .get<AnalysisResult>(`/reports/${filename}`)
       .then((res) => {
         setData(res.data)
         nowStr = new Date().toLocaleString()
@@ -185,7 +169,37 @@ export default function AnalysisPage() {
 
   const downloadHTML = () => {
     if (!htmlRef.current) return
-    const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><title>보고서 - ${baseName}</title><style>body{font-family:sans-serif;padding:20px}.header{border:2px solid #000;padding:6px;margin-bottom:10px}h2{color:#0F3ADA;margin-top:30px}pre{white-space:pre-wrap}.iframe-container{border:1px solid #ccc;height:500px}</style></head><body>${htmlRef.current.innerHTML}</body></html>`
+    const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/>
+<title>보고서 - ${baseName}</title>
+<style>
+  body {
+    font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+    padding: 20px;
+    font-size: 14px;
+  }
+  .header {
+    border: 2px solid #000;
+    padding: 6px;
+    margin-bottom: 10px;
+  }
+  h2 {
+    color: #0F3ADA;
+    margin-top: 30px;
+  }
+  pre {
+    white-space: pre-wrap;
+    font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+    font-weight: 350;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+  .iframe-container {
+    border: 1px solid #ccc;
+    height: 500px;
+  }
+</style>
+</head><body>${htmlRef.current.innerHTML}</body></html>`
+
     const blob = new Blob([html], { type: 'text/html' })
     saveAs(blob, `${baseName}.html`)
   }
@@ -219,7 +233,72 @@ export default function AnalysisPage() {
         {SECTIONS.map((section, idx) => (
           <div key={idx}>
             <h2>{section}</h2>
-            {idx === 3 ? (
+            {idx === 0 ? (
+              <>
+                <table className="vt-table mt-4">
+                  <tbody>
+                    <tr>
+                      <th>MD5</th>
+                      <td>{data.virustotal.hashes.md5}</td>
+                    </tr>
+                    <tr>
+                      <th>SHA-1</th>
+                      <td>{data.virustotal.hashes.sha1 ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>SHA-256</th>
+                      <td>{data.virustotal.hashes.sha256}</td>
+                    </tr>
+                    <tr>
+                      <th>Vhash</th>
+                      <td>{data.virustotal.hashes.vhash ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>File type</th>
+                      <td>{data.virustotal.file_type}</td>
+                    </tr>
+                    <tr>
+                      <th>Magic</th>
+                      <td>{data.virustotal.magic}</td>
+                    </tr>
+                    <tr>
+                      <th>File size</th>
+                      <td>
+                        {data.virustotal.file_size.toLocaleString()} bytes
+                      </td>
+                    </tr>
+                    {data.virustotal.trid && (
+                      <tr>
+                        <th>TrID 상위 3개</th>
+                        <td>
+                          {data.virustotal.trid
+                            .slice(0, 3)
+                            .map(
+                              (t: any) => `${t.file_type} (${t.probability}%)`
+                            )
+                            .join(', ')}
+                        </td>
+                      </tr>
+                    )}
+                    <tr>
+                      <th>DetectItEasy</th>
+                      <td>
+                        {data.virustotal.analysis.detectiteasy?.result ?? '—'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Magika</th>
+                      <td>{data.virustotal.analysis.magika?.result ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>Packer</th>
+                      <td>{data.virustotal.packer ?? '—'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <pre>{allTexts[idx].split('<VirusTotal')[0].trim()}</pre>
+              </>
+            ) : idx === 3 ? (
               <div className="iframe-container">
                 <iframe
                   src={`${window.location.origin}/static/callgraphs/${baseName}.html`}
@@ -362,6 +441,83 @@ export default function AnalysisPage() {
                 className="w-full h-[800px] border-none rounded"
                 sandbox="allow-scripts allow-same-origin"
               />
+            ) : currentSection === 0 ? (
+              /* ① Information */
+              <>
+                {/* 1) VirusTotal 테이블 */}
+                <table className="vt-table mt-4">
+                  <tbody>
+                    <tr>
+                      <th>MD5</th>
+                      <td>{data.virustotal.hashes.md5}</td>
+                    </tr>
+                    <tr>
+                      <th>SHA-1</th>
+                      <td>{data.virustotal.hashes.sha1 ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>SHA-256</th>
+                      <td>{data.virustotal.hashes.sha256}</td>
+                    </tr>
+                    <tr>
+                      <th>Vhash</th>
+                      <td>{data.virustotal.hashes.vhash ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>File type</th>
+                      <td>{data.virustotal.file_type}</td>
+                    </tr>
+                    <tr>
+                      <th>Magic</th>
+                      <td>{data.virustotal.magic}</td>
+                    </tr>
+                    <tr>
+                      <th>File size</th>
+                      <td>
+                        {data.virustotal.file_size.toLocaleString()} bytes
+                      </td>
+                    </tr>
+                    {data.virustotal.trid && (
+                      <tr>
+                        <th>TrID 상위 3개</th>
+                        <td>
+                          {data.virustotal.trid
+                            .slice(0, 3)
+                            .map(
+                              (t: any) => `${t.file_type} (${t.probability}%)`
+                            )
+                            .join(', ')}
+                        </td>
+                      </tr>
+                    )}
+                    <tr>
+                      <th>DetectItEasy</th>
+                      <td>
+                        {data.virustotal.analysis.detectiteasy?.result ?? '—'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Magika</th>
+                      <td>{data.virustotal.analysis.magika?.result ?? '—'}</td>
+                    </tr>
+                    <tr>
+                      <th>Packer</th>
+                      <td>{data.virustotal.packer ?? '—'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                {/* 2) GPT 요약 */}
+                <pre
+                  className="whitespace-pre-wrap"
+                  style={{
+                    fontFamily: 'semibold', // 다른 섹션과 동일
+                    fontWeight: 350,
+                    lineHeight: '1.6',
+                  }}
+                >
+                  {allTexts[0].split('<VirusTotal')[0].trim()}
+                </pre>
+              </>
             ) : currentSection === 1 ? (
               <>
                 {/* ② 정적 분석의 본문 */}
