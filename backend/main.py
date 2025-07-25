@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from openai import OpenAI
-
+from services.virustotal.vt_service import get_vt_data
 from services.analysis import analyze_file
 from generate_callgraph import generate_call_graph
 from services.suricata.yara_generator import generate_yara_rule
@@ -92,6 +92,8 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     # 2) 정적/동적 분석
     try:
         report = analyze_file(analyze_path)
+        report["virustotal"] = get_vt_data(report["get_metadata"]["sha256"])
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 

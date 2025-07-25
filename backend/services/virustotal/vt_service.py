@@ -1,11 +1,6 @@
-# backend/services/virustotal/vt_service.py
 from .vt_client import vt_get
 
 def get_vt_data(sha256: str) -> dict:
-    """
-    sha256 해시로 Virustotal 정보 가져와
-    필요한 해시 + 백신 검사 결과만 뽑아서 리턴.
-    """
     js = vt_get(f"/files/{sha256}")
     attrs = js["data"]["attributes"]
 
@@ -27,8 +22,18 @@ def get_vt_data(sha256: str) -> dict:
     pe_info = attrs.get("pe_info", {})
     packer = pe_info.get("packer") or pe_info.get("compiler") or None
 
-    # 백신 벤더별 탐지 결과
-    analysis = attrs.get("last_analysis_results", {})
+    # 백신 탐지 결과 (엔진별)
+    vt_results = attrs.get("last_analysis_results", {})
+
+    # 🧠 주요 분석 도구 결과 추출
+    def extract_result(name):
+        return vt_results.get(name, {}).get("result")
+
+    analysis = {
+        "detectiteasy": { "result": extract_result("DetectItEasy") },
+        "magika":       { "result": extract_result("Magika") },
+        # 필요시 다른 엔진도 추가 가능
+    }
 
     return {
         "hashes": hashes,
