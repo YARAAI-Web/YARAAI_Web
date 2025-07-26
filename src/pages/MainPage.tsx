@@ -9,7 +9,18 @@ export default function MainPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  /* ------------------------------ handlers ------------------------------ */
+  // ✅ 동적 분석 결과가 준비됐는지 확인하는 함수
+  const waitForDynamicReport = async (uuid: string) => {
+    const maxRetries = 60
+    for (let i = 0; i < maxRetries; i++) {
+      const res = await fetch(`/api/check-report/${uuid}`)
+      const data = await res.json()
+      if (data.exists) return true
+      await new Promise((r) => setTimeout(r, 1000))
+    }
+    throw new Error('❌ 동적 분석 report.json 생성 실패')
+  }
+
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0])
@@ -34,7 +45,19 @@ export default function MainPage() {
         form,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       )
-      navigate(`/analysis/${res.data.filename}`)
+
+      const filename = res.data.filename               // 예: abc123.exe
+      const baseName = filename.replace(/\.[^.]+$/, '') // abc123
+
+      // 💡 기존 캐시 제거 (섞이는 문제 방지)
+      sessionStorage.removeItem(`yaraai_sections_${baseName}`)
+      sessionStorage.removeItem(`yaraai_date_${baseName}`)
+
+      // ✅ 동적 분석 결과가 올 때까지 기다림
+      await waitForDynamicReport(baseName)
+
+      // ✅ 그제서야 페이지 이동
+      navigate(`/analysis/${filename}`)
     } catch (err: any) {
       console.error(err)
       alert(err.response?.data?.detail || '파일 업로드 중 오류가 발생했습니다.')
@@ -43,56 +66,32 @@ export default function MainPage() {
     }
   }, [file, navigate])
 
-  /* ------------------------------ UI ------------------------------ */
   return (
     <Layout>
       <div className="flex flex-col items-center mt-20 space-y-12">
-        {/* ────────────── 바깥 네모 ────────────── */}
         <div
-          className="
-            w-[980px] h-[344px] 
-            rounded-xl 
-            p-4
-            flex flex-col items-start
-            space-y-2
-            relative"
+          className="w-[980px] h-[344px] rounded-xl p-4 flex flex-col items-start space-y-2 relative"
           style={{
             border: '1.2px solid rgba(0,0,0,0.15)',
             borderRadius: '10px',
             marginTop: '80px',
           }}
         >
-          {/* 왼쪽 상단 텍스트 */}
           <p className="w-full text-center font-bold text-[16px] relative top-[10px]">
             Input Your <span style={{ color: '#1b65fe' }}>File</span>
           </p>
 
-          {/* ────────── 안쪽 네모 (가로·세로·색·테두리) ────────── */}
           <div
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => document.getElementById('fileInput')?.click()}
-            className="w-[908px] h-[250px] 
-            bg-[#f2f2f7] 
-            rounded-xl 
-            border border-gray-300 
-            flex flex-col items-center justify-center
-            mx-auto
-            cursor-pointer
-            mt-[20px]
-            relative"
-            style={{
-              border: '1.2px solid rgba(0,0,0,0.15)',
-              borderRadius: '10px',
-            }}
+            className="w-[908px] h-[250px] bg-[#f2f2f7] rounded-xl border border-gray-300 flex flex-col items-center justify-center mx-auto cursor-pointer mt-[20px] relative"
           >
-            {/* 파일이 있으면 파일명 표시 */}
             {file && (
               <span className="text-lg font-medium truncate max-w-[90%]">
                 {file.name}
               </span>
             )}
-
             <input
               id="fileInput"
               type="file"
@@ -103,7 +102,6 @@ export default function MainPage() {
           </div>
         </div>
 
-        {/* ────────────── Analysis 버튼 ────────────── */}
         <button
           type="button"
           onClick={handleAnalysis}
