@@ -1,5 +1,5 @@
 // src/pages/ReportPage.tsx
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchSection } from '../api/report'
 
@@ -10,7 +10,7 @@ export default function ReportPage() {
   useEffect(() => {
     if (!filename) return
     fetchSection(1, filename)
-      .then(r => setText(r.text))
+      .then((r) => setText(r.text))
       .catch(() => setText('섹션 로드 실패'))
   }, [filename])
 

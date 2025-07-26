@@ -509,7 +509,6 @@ export default function AnalysisPage() {
                 {/* 2) GPT 요약 */}
                 <pre
                   className="whitespace-pre-wrap"
-<<<<<<< HEAD
                   style={{
                     fontFamily: 'semibold', // 다른 섹션과 동일
                     fontWeight: 350,
@@ -517,11 +516,6 @@ export default function AnalysisPage() {
                   }}
                 >
                   {allTexts[0].split('<VirusTotal')[0].trim()}
-=======
-                  style={{ lineHeight: 1.6 }}
-                >
-                  {allTexts[0].split('===VirusTotal INFO START===')[0].trim()}
->>>>>>> cb53efa2 (1.virustotal api main.py및AnalysisPage수정)
                 </pre>
               </>
             ) : currentSection === 1 ? (
