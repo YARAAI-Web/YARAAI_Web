@@ -17,3 +17,9 @@ backend/services/c_h_json/
 
 # CallGraph 정적 파일
 backend/static/callgraphs/
+
+# CAPA JSON
+backend/services/CAPA/capa_json/
+
+# 분석 메타 JSON
+backend/meta_json/
