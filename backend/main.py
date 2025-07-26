@@ -10,11 +10,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from openai import OpenAI
-from services.virustotal.vt_service import get_vt_data
+import shutil
+
 from services.analysis import analyze_file
 from generate_callgraph import generate_call_graph
 from services.suricata.yara_generator import generate_yara_rule
 from services.unpacker import detect_packers, unpack_file
+from services.dynamic.gpt_summary import generate_summary_from_dynamic_report
+from routes import dynamic_summary
+#from routes.upload_to_before import router as upload_to_before_router
 
 # 🔐 환경 변수 로드
 load_dotenv()
@@ -27,6 +31,8 @@ UNPACK_DIR   = os.path.join(BASE_DIR, "services", "unpacked")
 META_DIR      = os.path.join(BASE_DIR, "meta_json")
 STATIC_DIR    = os.path.join(BASE_DIR, "static", "callgraphs")
 CAPA_JSON_DIR = os.path.join(BASE_DIR, "services", "CAPA", "capa_json")
+
+BEFORE_DIR = r"C:\Users\hyunj\analysis_yaraai\before"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(META_DIR, exist_ok=True)
@@ -43,13 +49,22 @@ def format_cwe(data_cwe: list) -> str:
 # 🚀 FastAPI 앱 설정
 app = FastAPI(title="YARAAI Analysis API")
 
+print("[🛠️] CORS 미들웨어 설정됨")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5174","http://127.0.0.1:5174","http://localhost:5173","http://localhost:3000"],  # 또는 ["*"]로 하면 모두 허용됨
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from routes import check_report
+app.include_router(check_report.router)
+
+app.include_router(dynamic_summary.router)
+#app.include_router(upload_to_before_router)
+
+
 
 # 정적 파일 서빙
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -75,24 +90,47 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     packers = detect_packers(dest_path)
     print(f"Detected packers: {packers}")
 
-    # 패커가 감지되었을 때만 언패킹 시도 및 분석 대상 경로 결정
+    # # 패커가 감지되었을 때만 언패킹 시도 및 분석 대상 경로 결정
+    # if packers:
+    #     unpack_results = unpack_file(dest_path, UNPACK_DIR, packers)
+    #     print(f"Unpack results: {unpack_results}")
+
+    #     # 언패킹에 성공한 패커가 하나라도 있으면 unpacked 파일을 분석
+    #     if any(unpack_results.values()):
+    #         analyze_path = os.path.join(UNPACK_DIR, os.path.basename(dest_path))
+    #     else:
+    #         analyze_path = dest_path
+    # else:
+    #     # 패커가 없으면 원본 그대로 분석
+    #     analyze_path = dest_path  
+
+    # ✅ 동적 분석용 대상 파일 결정 (언패킹 여부에 따라)
     if packers:
         unpack_results = unpack_file(dest_path, UNPACK_DIR, packers)
         print(f"Unpack results: {unpack_results}")
 
-        # 언패킹에 성공한 패커가 하나라도 있으면 unpacked 파일을 분석
+        # 언패킹 성공 시, 언패킹된 파일을 분석 대상으로 지정
         if any(unpack_results.values()):
-            analyze_path = os.path.join(UNPACK_DIR, os.path.basename(dest_path))
+            unpacked_filename = os.path.basename(dest_path)
+            analyze_path = os.path.join(UNPACK_DIR, unpacked_filename)
         else:
             analyze_path = dest_path
     else:
-        # 패커가 없으면 원본 그대로 분석
         analyze_path = dest_path
+
+    # ✅ [변경된 부분] 동적 분석용 디렉토리에 복사
+    try:
+        before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
+        shutil.copy2(analyze_path, before_path)
+        print(f"[📥] 분석 대상 파일 복사됨 → {before_path}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")   
     
     # 2) 정적/동적 분석
     try:
         report = analyze_file(analyze_path)
-        report["virustotal"] = get_vt_data(report["get_metadata"]["sha256"])
+        print(f"[📥] 분석 대상 파일 복사됨 → {before_path}")
+
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
@@ -186,6 +224,11 @@ async def get_history(file_id: str):
 class SectionRequest(BaseModel):
     sectionId: int
     filename: str
+
+@app.options("/api/section")
+def options_handler():
+    return JSONResponse(content={"status": "OK"})
+
 
 @app.post("/api/section")
 def fetch_gpt_section(req: SectionRequest = Body(...)):
@@ -325,11 +368,21 @@ Make sure to think step-by-step when answering.
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
     
     if req.sectionId == 1:
-        # Information 섹션: GPT 요약 텍스트와 virustotal 객체만 반환
-        return JSONResponse(content={
-            "text": text,
-            "virustotal": data["virustotal"]
-        })
+        a = f"""
+        <VirusTotal 상세 정보>
+        - MD5: {data['virustotal']['hashes']['md5']}
+        - SHA-1: {data['virustotal']['hashes'].get('sha1', '—')}
+        - SHA-256: {data['virustotal']['hashes']['sha256']}
+        - Vhash: {data['virustotal']['hashes'].get('vhash', '—')}
+        - File type: {data['virustotal']['file_type']}
+        - Magic: {data['virustotal']['magic']}
+        - File size: {data['virustotal']['file_size']} bytes
+        - TrID 상위 3개: {', '.join(f"{t['file_type']} ({t['probability']}%)" for t in data['virustotal'].get('trid', [])[:3])}
+        - Detect It Easy: {data['virustotal']['analysis'].get('detectiteasy', {}).get('result', '—')}
+        - Magika: {data['virustotal']['analysis'].get('magika', {}).get('result', '—')}
+        - Packer: {data['virustotal'].get('packer', '—')}
+        """
+        return JSONResponse(content={"a":a, "text": text})
 
     if req.sectionId == 4:
         filename_base = meta.get("module","").rsplit(".",1)[0]
@@ -360,7 +413,7 @@ def get_capa_report(req: CapaRequest = Body(...)):
 """
     try:
         resp = client.chat.completions.create(
-            model="gpt-4.o",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role":"system","content":"당신은 숙련된 악성코드 분석가입니다。"},
                 {"role":"user","content":prompt}
@@ -373,3 +426,14 @@ def get_capa_report(req: CapaRequest = Body(...)):
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
     return JSONResponse(content={"report": report})
+
+#동적
+import subprocess
+
+@app.on_event("startup")
+def start_run_monitor():
+    try:
+        subprocess.Popen(["python", "run_monitor.py"])
+        print("[🚀] run_monitor.py 자동 실행됨")
+    except Exception as e:
+        print(f"[❌] run_monitor 자동 실행 실패: {e}")
