@@ -1,3 +1,7 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
 # 가상환경 디렉터리
 venv/
 .venv/
