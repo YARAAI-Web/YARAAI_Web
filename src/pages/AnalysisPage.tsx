@@ -299,35 +299,78 @@ export default function AnalysisPage() {
         ))}
       </div>
 
-      {/* 실제 화면 UI */}
+      {/* 실제 화면 */}
       <div className="flex flex-col min-h-screen bg-white">
-        {/* 상단 요약 헤더 */}
+        {/* 헤더 */}
         <div className="px-8 pt-4 pb-0">
-          <div className="max-w-5xl mx-auto relative flex bg-white p-2 justify-start items-start gap-6">
-            <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md p-2">
+          <div className="max-w-5xl mx-auto relative flex bg-white p-2 items-start gap-6">
+            <div className="w-[200px] bg-orange-500 text-white font-bold text-center text-lg rounded-md p-2">
               Likely Malicious
             </div>
-            <div className="flex-none pl-5 space-y-2 -mt-[3px] -ml-4">
-              <div className="space-y-1 text-sm">
-                <div>
-                  <strong>Name:</strong> {filename}
-                </div>
-                <div>
-                  <strong>SHA-256:</strong> {data.get_metadata.sha256}
-                </div>
-                <div>
-                  <strong>Submission Date:</strong> {submissionDate}
-                </div>
+            <div className="pl-5 space-y-2 text-sm">
+              <div>
+                <strong>Name:</strong> {filename}
+              </div>
+              <div>
+                <strong>SHA-256:</strong> {data.get_metadata.sha256}
+              </div>
+              <div>
+                <strong>Submission Date:</strong> {submissionDate}
               </div>
             </div>
             <div className="absolute -top-[20px] right-[30px] flex flex-col space-y-[2px]">
-              <button onClick={downloadHTML} className="btn">
+              <button
+                onClick={downloadHTML}
+                className="
+                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                  text-[#FFFFFF]           /* 글자색 흰색 */
+                  font-bold            /* 글자 굵게 */
+                  text-xl              /* 큰 글자 크기 */
+                  transition
+                  px-[20px]                 /* 좌우 여백: 2rem */
+                  py-[7px]                 /* 상하 여백: 1rem */
+                  rounded-full         /* 완전한 pill(캡슐) 모양 */
+                  border-[0.1px]
+                  border-[rgba(0,0,0,0.15)]
+                "
+              >
                 Report
               </button>
-              <button onClick={downloadJSON} className="btn">
+              <button
+                onClick={downloadJSON}
+                className="
+                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                  text-[#FFFFFF]           /* 글자색 흰색 */
+                  font-bold            /* 글자 굵게 */
+                  text-xl              /* 큰 글자 크기 */
+                  transition
+                  px-[20px]                 /* 좌우 여백: 2rem */
+                  py-[7px]                 /* 상하 여백: 1rem */
+                  rounded-full         /* 완전한 pill(캡슐) 모양 */
+                  border-[0.1px]
+                  border-[rgba(0,0,0,0.15)]
+                "
+              >
                 JSON
               </button>
-              <button onClick={downloadSuricataJSON} className="btn">
+              <button
+                onClick={downloadSuricataJSON}
+                className="
+                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                  text-[#FFFFFF]           /* 글자색 흰색 */
+                  font-bold            /* 글자 굵게 */
+                  text-xl              /* 큰 글자 크기 */
+                  transition
+                  px-[20px]                 /* 좌우 여백: 2rem */
+                  py-[7px]                 /* 상하 여백: 1rem */
+                  rounded-full         /* 완전한 pill(캡슐) 모양 */
+                  border-[0.1px]
+                  border-[rgba(0,0,0,0.15)]
+                "
+              >
                 Suricata
               </button>
             </div>
