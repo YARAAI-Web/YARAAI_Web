@@ -331,7 +331,7 @@ def get_capa_report(req: CapaRequest = Body(...)):
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
     return JSONResponse(content={"report": resp.choices[0].message.content.strip()})
-'''
+
 # 동적 분석 자동 실행
 @app.on_event("startup")
 def start_run_monitor():
@@ -339,4 +339,3 @@ def start_run_monitor():
         subprocess.Popen(["python", "run_monitor.py"])
     except Exception as e:
         print(f"run_monitor 자동 실행 실패: {e}")
-'''
