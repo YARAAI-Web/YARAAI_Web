@@ -1,0 +1,82 @@
+[33m65356af5[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/cuckoo[m[33m, [m[1;32mcuckoo[m[33m)[m chore: 업데이트된 .gitignore 적용
+[33mdc0719da[m Resolve conflicts, integrate virustotal/GPT changes and update .gitignore
+[33m98d1f736[m chore: ignore __pycache__ and generated folders
+[33mc3082851[m 1.virustotal api main.py및AnalysisPage수정
+[33mf111ef29[m 보고서페이지 1번 섹션 수정 및 글꼴 수정
+[33m7259e931[m 클러스터링 제거
+[33m16b6129e[m Add files via upload
+[33m9288b859[m Add files via upload
+[33m4993148c[m Add files via upload
+[33m8ef4b291[m Add files via upload
+[33m10dbf9e0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m 클러스터링 제거
+[33mf6f6ca3a[m 보고서페이지 1번 섹션 수정 및 글꼴 수정
+[33m4e0fdad1[m 1번 섹션 글씨체 변경
+[33mcb53efa2[m 1.virustotal api main.py및AnalysisPage수정
+[33mad8350ad[m clear_history.py추가
+[33maf84dcc8[m 1.Information Virustotal API 추가 및 AnalysisPage 프론트 수정
+[33m9af37d66[m 1.Information Virustotal API 추가 및 AnalysisPage 프론트 수정
+[33m25eecf57[m fix: .gitignore 추가
+[33m2c1c3e10[m fix: .gitignore 추가
+[33m45b37a52[m pe header 수정 & 토글 생성 후 pe 정보 추가
+[33mf4d2b183[m fix: 자연어 처리 업데이트
+[33mdc7cd5b2[m fix: 프롬포트 수정
+[33m4153ff34[m fix: 오류 수정
+[33m5a491d01[m main.py 수정
+[33md699baad[m Fix
+[33m6779da57[m fix: mitre어택 구체화
+[33m57cc7e38[m AnalysisPage 프론트 수정
+[33m7f3cd360[m 프론트수정
+[33m98e26850[m 분석결과 새로고침 오류 해결
+[33mba51b0de[m 수리카타룰 개행문자 제거
+[33m3ec16735[m fix
+[33m899d60d0[m fix
+[33m2f04eb12[m Fix
+[33me4549bd0[m Fix
+[33m5c2aeb67[m update: openai api 연결 및 응답 수정
+[33m4c575e3f[m update: openai api 연결 및 응답 수정
+[33m3cf97ce0[m Fix
+[33m1fcf41bc[m unpacker.py(main.py에 호출하는 코드 추가해야됨, 카톡 보고 추가하기)
+[33mff8c2cba[m test(아무것도 바뀐 거 없음)
+[33m5e4211df[m Analysis,History 내용 일치
+[33mc53fd7db[m Suricata_rule download
+[33m7d136722[m JSON 다운로드 수정
+[33m496107d1[m Fix
+[33m5a56d89d[m Fix
+[33m6c193cc6[m Remove .env from tracking and add to .gitignore
+[33mb6b9165a[m fix: 오류수정
+[33m7a36f1c6[m fix: .gitignore추가
+[33m066347e2[m fix: .gitignore추가
+[33mb89e771c[m update: CWE 권고 추가
+[33m26f25906[m update: CWE 권고 추가
+[33m3ddad29f[m Fix
+[33m1db7e6a3[m Fix
+[33mdf875d2d[m [fix] 오류 수정
+[33m0bbc7aac[m [update] 오류 수정
+[33m737649e4[m [add] CAPA/MITRE ATT&&CK 추가
+[33m1eb3ea2f[m Fix
+[33me2ea9bb2[m Fix
+[33m320f7688[m Fix
+[33m797b93c3[m Fix
+[33m3b29ba0a[m Fix
+[33m27d7fa15[m Fix
+[33mb596dfe3[m Fix
+[33mbb24e3d9[m Fix
+[33m91bae5cf[m Rename ReportsPage to HistoryPage
+[33m8e4da477[m Rename ReportPage.tsx to ReportsPage.tsx and update component name
+[33m95be4614[m Track ReportPage.tsx
+[33m32e1174c[m Fix
+[33m65fbdaad[m Fix
+[33m3d2eb317[m Fix
+[33m24951536[m [update] backend 오류 수정
+[33m393b83c8[m [update] backend 오류 수정
+[33mc066c192[m [update] backend 오류 수정
+[33m29ef3b3e[m [update] backend 오류 수정
+[33m86020957[m [update] backend 오류 수정
+[33ma68d37f1[m git pull origin mainMerge branch 'main' of https://github.com/yaraai02472/YARRAI_Web
+[33mcfe74da3[m [update] backend update
+[33me0fef46b[m Remove unused React imports and fix Report pages
+[33m599533a9[m Initial commit
+[33m6265fb0f[m Initial commit
+[33m01bb1c56[m Initial commit: 프로젝트 초기 구조 및 코드 추가
+[33m7c29be69[m first commit
+[33m1493f977[m first commit
