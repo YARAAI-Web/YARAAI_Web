@@ -1,0 +1,76 @@
+{
+  "get_metadata": {
+    "path": "C:\\Users\\lg\\Desktop\\benign\\benign_files\\ea3492a8c6c7a2510f7c2cd9fe4523b83d4e8d6273f82931d9060f20415d30ae.exe",
+    "module": "ea3492a8c6c7a2510f7c2cd9fe4523b83d4e8d6273f82931d9060f20415d30ae.exe",
+    "base": "0x400000",
+    "size": "0x16000",
+    "md5": "a81fce77ed71b89f7fdbe1c6b44109de",
+    "sha256": "ea3492a8c6c7a2510f7c2cd9fe4523b83d4e8d6273f82931d9060f20415d30ae",
+    "crc32": "0x2680ef6a",
+    "filesize": "0x14748"
+  },
+  "get_current_address": "0x1430",
+  "get_current_function": {
+    "address": "0x1430",
+    "name": "XsdTool.Xsd::Main",
+    "size": "0xe"
+  },
+  "get_entry_points": [
+    {
+      "address": "0x1430",
+      "name": "XsdTool.Xsd::Main",
+      "size": "0xe"
+    }
+  ],
+  "file_entropy": 5.057147716632278,
+  "string_stats": {
+    "string_count": 0,
+    "avg_str_len": 0,
+    "max_str_len": 0
+  },
+  "pe_headers": {
+    "file_name": "ea3492a8c6c7a2510f7c2cd9fe4523b83d4e8d6273f82931d9060f20415d30ae.exe",
+    "machine": "0x14c",
+    "number_of_sections": 3,
+    "time_date_stamp": "0x4833946c",
+    "pointer_to_symbol_table": "0x0",
+    "number_of_symbols": 0,
+    "size_of_optional_header": 224,
+    "characteristics": "0x10e",
+    "entry_point": "0x1183e",
+    "image_base": "0x400000",
+    "section_alignment": "0x2000",
+    "file_alignment": "0x1000",
+    "subsystem": "0x3",
+    "dll_characteristics": "0x400",
+    "sections": [
+      {
+        "name": ".text",
+        "virtual_address": "0x2000",
+        "virtual_size": "0xf844",
+        "raw_size": "0x10000",
+        "characteristics": "0x60000020"
+      },
+      {
+        "name": ".rsrc",
+        "virtual_address": "0x12000",
+        "virtual_size": "0xb38",
+        "raw_size": "0x1000",
+        "characteristics": "0x40000040"
+      },
+      {
+        "name": ".reloc",
+        "virtual_address": "0x14000",
+        "virtual_size": "0xc",
+        "raw_size": "0x1000",
+        "characteristics": "0x42000040"
+      }
+    ]
+  },
+  "c_code": [],
+  "h_code": [],
+  "virustotal": {
+    "sha256": "ea3492a8c6c7a2510f7c2cd9fe4523b83d4e8d6273f82931d9060f20415d30ae",
+    "error": 429
+  }
+}

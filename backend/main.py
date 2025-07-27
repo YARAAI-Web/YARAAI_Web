@@ -228,8 +228,8 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 - Magic: {data['virustotal']['magic']}
 - File size: {data['virustotal']['file_size']} bytes
 - TrID 상위 3개: {', '.join(f"{t['file_type']} ({t['probability']}%)" for t in data['virustotal'].get('trid',[])[:3])}
-- Detect It Easy: {data['virustotal']['analysis'].get('detectiteasy',{{}}).get('result','—')}
-- Magika: {data['virustotal']['analysis'].get('magika',{{}}).get('result','—')}
+- Detect It Easy: {data['virustotal']['analysis'].get('detectiteasy',{}).get('result','—')}
+- Magika: {data['virustotal']['analysis'].get('magika',{}).get('result','—')}
 - Packer: {data['virustotal'].get('packer','—')}
 
 위 정보를 참고하여 파일의 기본 속성과 백신 엔진별 탐지 결과를 한글로 요약해주세요.
@@ -240,7 +240,7 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 - 크기: {data['get_metadata'].get('fileSize','')} bytes
 - 섹션 목록: {', '.join(s.get('name','') for s in data['pe_headers'].get('sections',[]))}
 - 문자열 개수: {data['string_stats'].get('string_count','')}
-- Entry Point: {data.get('get_entry_points',[{{}}])[0].get('address','')} / {data.get('get_entry_points',[{{}}])[0].get('name','')}
+- Entry Point: {data.get('get_entry_points',[{}])[0].get('address','')} / {data.get('get_entry_points',[{}])[0].get('name','')}
 - 엔트로피: {data['file_entropy']}
 """,
         3: """
@@ -277,8 +277,8 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 <분석 대상 개요>
 - 파일명: {data['get_metadata']['module']}
 - SHA-256: {data['get_metadata']['sha256']}
-- 형식: {data['get_metadata']['fileType']}
-- 크기: {data['get_metadata']['fileSize']} bytes
+- 형식: {data['pe_headers']['file_type']}
+- 크기: {data['get_metadata']['filesize']} bytes
 
 <{title}>
 {body}
@@ -331,7 +331,7 @@ def get_capa_report(req: CapaRequest = Body(...)):
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
     return JSONResponse(content={"report": resp.choices[0].message.content.strip()})
-
+'''
 # 동적 분석 자동 실행
 @app.on_event("startup")
 def start_run_monitor():
@@ -339,3 +339,4 @@ def start_run_monitor():
         subprocess.Popen(["python", "run_monitor.py"])
     except Exception as e:
         print(f"run_monitor 자동 실행 실패: {e}")
+'''

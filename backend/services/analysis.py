@@ -16,6 +16,7 @@ from .CAPA import map_mitre
 from .CWE.map_CWE import analyze_code_with_cwe
 # Virustotal 연동
 from services.virustotal.vt_service import get_vt_data
+from .robust_malware_graph.test import malware_sniper
 
 # IDA 및 MCP 설정
 IDA_PATH   = r"C:\Program Files\IDA Professional 9.1\ida.exe"
@@ -73,6 +74,20 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
 
     summary    = ch_data.get("summary", [])
     print("➤ YARA rules extracted")
+    
+    meta: Dict[str, Any] = {
+        "get_metadata":         mcp['get_metadata'],
+        "get_current_address":  mcp['get_current_address'],
+        "get_current_function": mcp['get_current_address'],
+        "get_entry_points":     mcp['get_entry_points'],
+        "file_entropy":         mcp['file_entropy'],
+        "string_stats":         mcp['string_stats'],
+        "pe_headers":           pe_hdr,
+        "c_code":               ch_data.get("c_code", []),
+        "h_code":               ch_data.get("h_code", []),
+        "virustotal":           ch_data.get("virustotal", {})
+    }
+    label, prob = malware_sniper(meta)
 
     # 3) CAPA 룰 매핑
     capa_output    = map_mitre.map_mitre(file_path)
@@ -103,6 +118,8 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
 
     # 6) 최종 리포트 조립
     report: Dict[str, Any] = {
+        "label":                label,
+        "mal_prob":             prob,
         "get_metadata":         mcp['get_metadata'],
         "get_current_address":  mcp['get_current_address'],
         "get_current_function": mcp['get_current_address'],
