@@ -9,6 +9,7 @@ import hashlib
 from typing import Any, Dict
 
 from .mcp_collector import mcp_run
+from .yara_rules.rule_search import yara_matches
 from .c_h_run import analyze_file as run_analysis, OUTPUT_DIR
 from .extract_pe_headers import extract_headers
 from .CAPA import map_mitre
@@ -52,6 +53,13 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     except Exception:
         pe_hdr = {}
     print("➤ PE headers extracted")
+    
+    # 서웅룰추출
+    func = []
+    for dll in pe_hdr['imports']:
+        func += dll['functions']
+    print(func)
+    yara_rules = yara_matches(func) # 응애
 
     # 2) C/H + VT 분석
     run_analysis(file_path)
@@ -64,7 +72,6 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     print("➤ C/H + VT analysis done")
 
     summary    = ch_data.get("summary", [])
-    yara_rules = ch_data.get("yara_rules", "")
     print("➤ YARA rules extracted")
 
     # 3) CAPA 룰 매핑
