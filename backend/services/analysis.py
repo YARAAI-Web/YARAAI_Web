@@ -78,7 +78,7 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     meta: Dict[str, Any] = {
         "get_metadata":         mcp['get_metadata'],
         "get_current_address":  mcp['get_current_address'],
-        "get_current_function": mcp['get_current_address'],
+        "get_current_function": mcp['get_current_function'],
         "get_entry_points":     mcp['get_entry_points'],
         "file_entropy":         mcp['file_entropy'],
         "string_stats":         mcp['string_stats'],
@@ -87,6 +87,13 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
         "h_code":               ch_data.get("h_code", []),
         "virustotal":           ch_data.get("virustotal", {})
     }
+    # dict를 바로 JSON으로 덤프
+    with open('formatted_report.json', 'w', encoding='utf-8') as f:
+        json.dump(meta, f, ensure_ascii=False, indent=4)
+
+    print("formatted_report.json 파일이 생성되었습니다.")
+
+    print(meta)
     label, prob = malware_sniper(meta)
 
     # 3) CAPA 룰 매핑
@@ -122,7 +129,7 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
         "mal_prob":             prob,
         "get_metadata":         mcp['get_metadata'],
         "get_current_address":  mcp['get_current_address'],
-        "get_current_function": mcp['get_current_address'],
+        "get_current_function": mcp['get_current_function'],
         "get_entry_points":     mcp['get_entry_points'],
         "file_entropy":         mcp['file_entropy'],
         "string_stats":         mcp['string_stats'],
