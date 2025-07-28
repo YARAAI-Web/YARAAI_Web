@@ -64,6 +64,7 @@ app.add_middleware(
 
 app.include_router(check_report.router)
 app.include_router(dynamic_summary.router)
+app.include_router(report_router)
 
 # 정적 파일 서빙
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -90,19 +91,29 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     # 언패킹 여부에 따른 분석 대상 결정
     if packers:
         unpack_results = unpack_file(dest_path, UNPACK_DIR, packers)
+        print(f"[🧩] 언패킹 결과: {unpack_results}")  # 🔁 복원 로그
+
         if any(unpack_results.values()):
-            analyze_path = os.path.join(UNPACK_DIR, os.path.basename(dest_path))
+            unpacked_file = next((path for path in unpack_results.values() if path and os.path.exists(path)), None)
+            if unpacked_file:
+                analyze_path = unpacked_file
+                print(f"[✅] 언패킹 성공: {analyze_path}")  # 🔁 복원 로그
+            else:
+                analyze_path = dest_path
+                print(f"[⚠️] 언패킹 결과 유효하지 않음 → 원본 사용")  # 🔁
         else:
             analyze_path = dest_path
+            print(f"[❌] 언패킹 실패 → 원본 사용")  # 🔁
     else:
         analyze_path = dest_path
+        print(f"[ℹ️] 패커 없음 → 원본 사용")  # 🔁
 
-    # # ✅ 동적 분석용 디렉토리에 복사
-    # try:
-    #     before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
-    #     shutil.copy2(analyze_path, before_path)
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")
+     # ✅ 동적 분석용 디렉토리에 복사
+    try:
+        before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
+        shutil.copy2(analyze_path, before_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")
 
     # 2) 정적/동적 분석
     try:
@@ -121,26 +132,15 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     except Exception:
         yara_txt = ""
 
-    # 4) Suricata 룰 변환
+     # 4) Suricata 룰 변환
     tmp_yar = os.path.join(UPLOAD_DIR, f"{base_uuid}.yar")
     with open(tmp_yar, "w", encoding="utf-8") as yf:
         yf.write(yara_txt)
-    script = os.path.join(BASE_DIR, "services", "suricata", "run_convert.py")
-    try:
-        proc = subprocess.run(
-            ["python3", script, tmp_yar],
-            cwd=os.path.join(BASE_DIR, "services", "suricata"),
-            capture_output=True, text=True, check=True
-        )
-        lines = proc.stdout.splitlines()
-        if lines and not lines[0].startswith("alert"):
-            lines = lines[1:]
-        report["suricata_rule"] = "\n".join(lines)
-    except subprocess.CalledProcessError:
-        report["suricata_rule"] = ""
+    report["suricata_rule"] = extract_rules_from_meta(report)
 
     # 5) 결과 저장
     report["yara_rule"] = yara_txt
+    report["suricata_rule"] = extract_rules_from_meta(report)
     meta_path = os.path.join(META_DIR, f"{base_uuid}.json")
     with open(meta_path, "w", encoding="utf-8") as mf:
         json.dump(report, mf, ensure_ascii=False, indent=2)
@@ -319,7 +319,7 @@ def get_capa_report(req: CapaRequest = Body(...)):
     prompt = "아래는 CAPA 분석 도구가 출력한 JSON 결과입니다...\n"
     try:
         resp = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "당신은 숙련된 악성코드 분석가입니다。"},
                 {"role": "user", "content": prompt}
@@ -331,7 +331,7 @@ def get_capa_report(req: CapaRequest = Body(...)):
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
     return JSONResponse(content={"report": resp.choices[0].message.content.strip()})
-'''
+
 # 동적 분석 자동 실행
 @app.on_event("startup")
 def start_run_monitor():
@@ -339,4 +339,11 @@ def start_run_monitor():
         subprocess.Popen(["python", "run_monitor.py"])
     except Exception as e:
         print(f"run_monitor 자동 실행 실패: {e}")
-'''
+
+
+@app.get("/api/download/report/{uuid}")
+def download_report(uuid: str):
+    path = os.path.join(AFTER_DIR, f"{uuid}_dynamic.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
+    return FileResponse(path, filename=f"{uuid}_dynamic.json")
