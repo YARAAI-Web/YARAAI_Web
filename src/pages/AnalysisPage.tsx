@@ -5,6 +5,8 @@ import axios from 'axios'
 import { saveAs } from 'file-saver'
 
 interface AnalysisResult {
+  label: string
+  mal_prob: Float16Array
   get_metadata: {
     module: string
     md5: string
@@ -58,6 +60,7 @@ export default function AnalysisPage() {
   )
   const htmlRef = useRef<HTMLDivElement>(null)
   const [showPeDetails, setShowPeDetails] = useState(false)
+  const [showYaraRule, setShowYaraRule] = useState(false)
 
   useEffect(() => {
     if (!rawFilename) {
@@ -306,6 +309,7 @@ export default function AnalysisPage() {
           <div className="max-w-5xl mx-auto relative flex bg-white p-2 items-start gap-6">
             <div className="w-[200px] bg-orange-500 text-white font-bold text-center text-lg rounded-md p-2">
               Likely Malicious
+              <span className="mt-1 text-3xl">{data.mal_prob}</span> 
             </div>
             <div className="pl-5 space-y-2 text-sm">
               <div>
@@ -494,6 +498,45 @@ export default function AnalysisPage() {
                 >
                   {allTexts[1]}
                 </pre>
+                <button
+                  onClick={() => setShowPeDetails((v) => !v)}
+                  className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+                >
+                  {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
+                </button>
+                {showPeDetails && (
+                  <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
+                    <div>
+                      <strong>Import DLL:</strong>{' '}
+                      {Array.isArray(data.pe_headers.imports)
+                        ? data.pe_headers.imports.map((s) => s.dll).join(', ')
+                        : 'N/A'}
+                    </div>
+                    <div>
+                      <strong>섹션 개수:</strong>{' '}
+                      {data.pe_headers.number_of_sections ?? 'N/A'}
+                    </div>
+                    <div>
+                      <strong>섹션 정보:</strong>{' '}
+                      {Array.isArray(data.pe_headers.sections)
+                        ? data.pe_headers.sections.map((s) => s.name).join(', ')
+                        : 'N/A'}
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowYaraRule(v => !v)}
+                  className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+                >
+                  {showYaraRule ? 'YARA 룰 숨기기' : 'YARA 룰 보기'}
+                </button>
+                {showYaraRule && (
+                  <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
+                    <pre className="whitespace-pre-wrap font-mono text-sm">
+                      {data.yara_rule}
+                    </pre>
+                  </div>
+                )}
                 <button
                   onClick={() => setShowPeDetails((v) => !v)}
                   className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"

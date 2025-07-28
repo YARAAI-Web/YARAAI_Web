@@ -17,10 +17,11 @@ from openai import OpenAI
 from services.analysis import analyze_file
 from generate_callgraph import generate_call_graph
 from services.suricata.yara_generator import generate_yara_rule
+from services.suricata.suricata_extractor import extract_rules_from_meta
 from services.unpacker import detect_packers, unpack_file
 from services.dynamic.gpt_summary import generate_summary_from_dynamic_report
 from services.virustotal.vt_service import get_vt_data
-from routes import dynamic_summary, check_report
+from routes import dynamic_summary, check_report, download__report
 
 # 🔐 환경 변수 로드
 load_dotenv()
@@ -64,7 +65,7 @@ app.add_middleware(
 
 app.include_router(check_report.router)
 app.include_router(dynamic_summary.router)
-app.include_router(report_router)
+app.include_router(download__report.router)
 
 # 정적 파일 서빙
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -108,12 +109,12 @@ async def upload_and_analyze(file: UploadFile = File(...)):
         analyze_path = dest_path
         print(f"[ℹ️] 패커 없음 → 원본 사용")  # 🔁
 
-     # ✅ 동적 분석용 디렉토리에 복사
-    try:
-        before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
-        shutil.copy2(analyze_path, before_path)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")
+    #  # ✅ 동적 분석용 디렉토리에 복사
+    # try:
+    #     before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
+    #     shutil.copy2(analyze_path, before_path)
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")
 
     # 2) 정적/동적 분석
     try:
