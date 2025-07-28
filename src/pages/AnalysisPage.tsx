@@ -1,4 +1,4 @@
-// src\pages\AnalysisPage.tsx
+// src/pages/AnalysisPage.tsx
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
@@ -20,8 +20,8 @@ interface AnalysisResult {
   string_stats: Record<string, any>
   pe_headers: {
     number_of_sections?: number
-    sections?: { name: string }
-    imports?: { dll: string }
+    sections?: { name: string }[]
+    imports?: { dll: string }[]
     [key: string]: any
   }
   c_code: string[]
@@ -29,7 +29,8 @@ interface AnalysisResult {
   virustotal: Record<string, any>
   yara_rule: string
   suricata_rule: string
-  tags?: string[]
+  MITRE: string[]
+  CWE: [string, string, string][]
 }
 
 const SECTIONS = [
@@ -109,6 +110,7 @@ export default function AnalysisPage() {
         setSubmissionDate(nowStr)
         return Promise.all(
           SECTIONS.map((_, idx) => {
+            // Call Graph(4번) 은 바로 표시
             if (idx === 3) return Promise.resolve('(Call Graph)')
             return axios
               .post<{ text: string }>('/api/section', {
@@ -148,6 +150,8 @@ export default function AnalysisPage() {
       c_code,
       h_code,
       virustotal,
+      MITRE,
+      CWE,
     } = data
     const filtered = {
       get_metadata,
@@ -160,6 +164,8 @@ export default function AnalysisPage() {
       c_code,
       h_code,
       virustotal,
+      MITRE,
+      CWE,
     }
     const blob = new Blob([JSON.stringify(filtered, null, 2)], {
       type: 'application/json',
@@ -172,31 +178,11 @@ export default function AnalysisPage() {
     const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/>
 <title>보고서 - ${baseName}</title>
 <style>
-  body {
-    font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
-    padding: 20px;
-    font-size: 14px;
-  }
-  .header {
-    border: 2px solid #000;
-    padding: 6px;
-    margin-bottom: 10px;
-  }
-  h2 {
-    color: #0F3ADA;
-    margin-top: 30px;
-  }
-  pre {
-    white-space: pre-wrap;
-    font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
-    font-weight: 350;
-    line-height: 1.6;
-    margin-top: 8px;
-  }
-  .iframe-container {
-    border: 1px solid #ccc;
-    height: 500px;
-  }
+  body { font-family:'Segoe UI','Malgun Gothic',sans-serif; padding:20px; font-size:14px; }
+  .header { border:2px solid #000; padding:6px; margin-bottom:10px; }
+  h2 { color:#0F3ADA; margin-top:30px; }
+  pre { white-space:pre-wrap; font-family:'Segoe UI','Malgun Gothic',sans-serif; font-weight:350; line-height:1.6; margin-top:8px; }
+  .iframe-container { border:1px solid #ccc; height:500px; }
 </style>
 </head><body>${htmlRef.current.innerHTML}</body></html>`
 
@@ -296,12 +282,12 @@ export default function AnalysisPage() {
                     </tr>
                   </tbody>
                 </table>
-                <pre>{allTexts[idx].split('<VirusTotal')[0].trim()}</pre>
+                <pre>{allTexts[0].split('<VirusTotal')[0].trim()}</pre>
               </>
             ) : idx === 3 ? (
               <div className="iframe-container">
                 <iframe
-                  src={`${window.location.origin}/static/callgraphs/${baseName}.html`}
+                  src={`/static/callgraphs/${baseName}.html`}
                   style={{ width: '100%', height: '100%', border: 'none' }}
                   sandbox="allow-scripts allow-same-origin"
                 />
@@ -313,25 +299,23 @@ export default function AnalysisPage() {
         ))}
       </div>
 
-      {/* 실제 화면 UI */}
+      {/* 실제 화면 */}
       <div className="flex flex-col min-h-screen bg-white">
-        {/* 상단 요약 헤더 */}
+        {/* 헤더 */}
         <div className="px-8 pt-4 pb-0">
-          <div className="max-w-5xl mx-auto relative flex bg-white p-2 justify-start items-start gap-6">
-            <div className="w-[200px] bg-orange-500 text-white font-bold text-center flex items-center justify-center text-lg rounded-md p-2">
+          <div className="max-w-5xl mx-auto relative flex bg-white p-2 items-start gap-6">
+            <div className="w-[200px] bg-orange-500 text-white font-bold text-center text-lg rounded-md p-2">
               Likely Malicious
             </div>
-            <div className="flex-none pl-5 space-y-2 -mt-[3px] -ml-4">
-              <div className="space-y-1 text-sm">
-                <div>
-                  <strong>Name:</strong> {filename}
-                </div>
-                <div>
-                  <strong>SHA-256:</strong> {data.get_metadata.sha256}
-                </div>
-                <div>
-                  <strong>Submission Date:</strong> {submissionDate}
-                </div>
+            <div className="pl-5 space-y-2 text-sm">
+              <div>
+                <strong>Name:</strong> {filename}
+              </div>
+              <div>
+                <strong>SHA-256:</strong> {data.get_metadata.sha256}
+              </div>
+              <div>
+                <strong>Submission Date:</strong> {submissionDate}
               </div>
             </div>
             <div className="absolute -top-[20px] right-[30px] flex flex-col space-y-[2px]">
@@ -397,14 +381,13 @@ export default function AnalysisPage() {
           style={{
             height: '1px',
             backgroundColor: 'rgba(0,0,0,0.15)',
-            margin: '1.5rem 0rem 0rem',
+            margin: '1.5rem 0 0',
           }}
         />
 
         {/* 사이드 네비 + 메인 컨텐츠 */}
-        <div className=" flex flex-1 px-8 pt-0 pb-8 gap-6">
+        <div className="flex flex-1 px-8 pt-0 pb-8 gap-6">
           <nav className="relative w-[220px] bg-gray-50 flex flex-col h-[calc(100vh-80px)] border-r-4 border-[#0F3ADA]">
-            <div className="absolute top-0 left-full right-0 h-px bg-gray-300" />
             {SECTIONS.map((label, idx) => (
               <div
                 key={idx}
@@ -418,16 +401,6 @@ export default function AnalysisPage() {
                 {label}
               </div>
             ))}
-            <div
-              className="
-                absolute
-                top-0
-                left-full
-                right-0
-                border-t
-                border-gray-300
-              "
-            />
           </nav>
 
           <main className="flex-1 overflow-auto p-4 bg-white rounded-xl shadow border-l-4 border-[#0F3ADA] pl-[40px] pr-[40px]">
@@ -442,9 +415,8 @@ export default function AnalysisPage() {
                 sandbox="allow-scripts allow-same-origin"
               />
             ) : currentSection === 0 ? (
-              /* ① Information */
               <>
-                {/* 1) VirusTotal 테이블 */}
+                {/* ① Information */}
                 <table className="vt-table mt-4">
                   <tbody>
                     <tr>
@@ -506,43 +478,28 @@ export default function AnalysisPage() {
                     </tr>
                   </tbody>
                 </table>
-                {/* 2) GPT 요약 */}
                 <pre
                   className="whitespace-pre-wrap"
-                  style={{
-                    fontFamily: 'semibold', // 다른 섹션과 동일
-                    fontWeight: 350,
-                    lineHeight: '1.6',
-                  }}
+                  style={{ fontWeight: 350, lineHeight: '1.6' }}
                 >
                   {allTexts[0].split('<VirusTotal')[0].trim()}
                 </pre>
               </>
             ) : currentSection === 1 ? (
               <>
-                {/* ② 정적 분석의 본문 */}
+                {/* ② 정적 분석 */}
                 <pre
-                  className="
-                    whitespace-pre-wrap
-                    "
-                  style={{
-                    fontFamily: 'semibold',
-                    fontWeight: 350,
-                    lineHeight: '1.6',
-                  }}
+                  className="whitespace-pre-wrap"
+                  style={{ fontWeight: 350, lineHeight: '1.6' }}
                 >
                   {allTexts[1]}
                 </pre>
-
-                {/* ↘ 여기, 본문 바로 아래에 토글 버튼 */}
-                <div className="mt-4">
-                  <button
-                    onClick={() => setShowPeDetails((v) => !v)}
-                    className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
-                  >
-                    {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowPeDetails((v) => !v)}
+                  className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+                >
+                  {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
+                </button>
                 {showPeDetails && (
                   <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
                     <div>
@@ -564,31 +521,32 @@ export default function AnalysisPage() {
                   </div>
                 )}
               </>
-            ) : (
+            ) : currentSection === 2 ? (
+              /* ③ 동적 분석 */
               <pre
-                className="
-                  whitespace-pre-wrap
-                  "
-                style={{
-                  fontFamily: 'semibold',
-                  fontWeight: 350,
-                  lineHeight: '1.6',
-                }}
+                className="whitespace-pre-wrap"
+                style={{ fontWeight: 350, lineHeight: '1.6' }}
               >
-                {allTexts[currentSection]}
+                {allTexts[2]}
+              </pre>
+            ) : currentSection === 4 ? (
+              /* ⑤ MITRE ATT&CK */
+              <pre
+                className="whitespace-pre-wrap"
+                style={{ fontWeight: 350, lineHeight: '1.6' }}
+              >
+                {allTexts[4]}
+              </pre>
+            ) : (
+              /* ⑥ CWE */
+              <pre
+                className="whitespace-pre-wrap"
+                style={{ fontWeight: 350, lineHeight: '1.6' }}
+              >
+                {allTexts[5]}
               </pre>
             )}
           </main>
-          <div
-            className="
-                absolute 
-                bottom-0         /* 컨테이너(=nav 높이) 바로 아래에 붙음 */
-                left-[300px]     /* nav 너비만큼 들어옴 */
-                right-0          /* 오른쪽 끝까지 */
-                border-t-2 
-                border-gray-300
-              "
-          />
         </div>
       </div>
     </>

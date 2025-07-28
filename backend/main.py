@@ -21,6 +21,8 @@ from services.unpacker import detect_packers, unpack_file
 from services.dynamic.gpt_summary import generate_summary_from_dynamic_report
 from services.virustotal.vt_service import get_vt_data
 from routes import dynamic_summary, check_report
+from routes.download_report import router as report_router
+from services.suricata.suricata_extractor import extract_rules_from_meta
 
 # 🔐 환경 변수 로드
 load_dotenv()
@@ -64,6 +66,7 @@ app.add_middleware(
 
 app.include_router(check_report.router)
 app.include_router(dynamic_summary.router)
+app.include_router(report_router)
 
 # 정적 파일 서빙
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -90,12 +93,22 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     # 언패킹 여부에 따른 분석 대상 결정
     if packers:
         unpack_results = unpack_file(dest_path, UNPACK_DIR, packers)
+        print(f"[🧩] 언패킹 결과: {unpack_results}")  # 🔁 복원 로그
+
         if any(unpack_results.values()):
-            analyze_path = os.path.join(UNPACK_DIR, os.path.basename(dest_path))
+            unpacked_file = next((path for path in unpack_results.values() if path and os.path.exists(path)), None)
+            if unpacked_file:
+                analyze_path = unpacked_file
+                print(f"[✅] 언패킹 성공: {analyze_path}")  # 🔁 복원 로그
+            else:
+                analyze_path = dest_path
+                print(f"[⚠️] 언패킹 결과 유효하지 않음 → 원본 사용")  # 🔁
         else:
             analyze_path = dest_path
+            print(f"[❌] 언패킹 실패 → 원본 사용")  # 🔁
     else:
         analyze_path = dest_path
+        print(f"[ℹ️] 패커 없음 → 원본 사용")  # 🔁
 
     # ✅ 동적 분석용 디렉토리에 복사
     try:
@@ -121,26 +134,18 @@ async def upload_and_analyze(file: UploadFile = File(...)):
     except Exception:
         yara_txt = ""
 
-    # 4) Suricata 룰 변환
+     # 4) Suricata 룰 변환
     tmp_yar = os.path.join(UPLOAD_DIR, f"{base_uuid}.yar")
     with open(tmp_yar, "w", encoding="utf-8") as yf:
         yf.write(yara_txt)
-    script = os.path.join(BASE_DIR, "services", "suricata", "run_convert.py")
-    try:
-        proc = subprocess.run(
-            ["python3", script, tmp_yar],
-            cwd=os.path.join(BASE_DIR, "services", "suricata"),
-            capture_output=True, text=True, check=True
-        )
-        lines = proc.stdout.splitlines()
-        if lines and not lines[0].startswith("alert"):
-            lines = lines[1:]
-        report["suricata_rule"] = "\n".join(lines)
-    except subprocess.CalledProcessError:
-        report["suricata_rule"] = ""
+    report["suricata_rule"] = extract_rules_from_meta(report)
 
     # 5) 결과 저장
     report["yara_rule"] = yara_txt
+    report["suricata_rule"] = extract_rules_from_meta(report)
+
+    # 5) 결과 저장
+    
     meta_path = os.path.join(META_DIR, f"{base_uuid}.json")
     with open(meta_path, "w", encoding="utf-8") as mf:
         json.dump(report, mf, ensure_ascii=False, indent=2)
@@ -185,7 +190,7 @@ async def get_history(file_id: str):
         raise HTTPException(status_code=404, detail=f"No history for {file_id}")
     return FileResponse(json_path, media_type="application/json")
 
-# 🧠 GPT 분석 섹션 API (1~7)
+# 🧠 GPT 분석 섹션 API (1~6)
 class SectionRequest(BaseModel):
     sectionId: int
     filename: str
@@ -208,83 +213,61 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
         2: "② 정적 분석",
         3: "③ 동적 분석",
         4: "④ Call Graph",
-        5: "⑤ 클러스터링",
-        6: "⑥ MITRE ATT&CK",
-        7: "⑦ CWE",
+        5: "⑤ MITRE ATT&CK",
+        6: "⑥ CWE",
     }
+
     SECTION_PROMPTS = {
         1: f"""
 ① Information
-- 다음 정보를 포함한 요약 리포트를 5줄 이상으로 자연어 처리
-  • MITRE ATT&CK 기술 (처음 3개): {data['MITRE'][:3]}
-  • 모듈명: {data['get_metadata'].get('module', '')}
-  • SHA-256: {data['get_metadata'].get('sha256', '')}
+- MITRE ATT&CK 기술 (처음 3개): {data['MITRE'][:3]}
+- 모듈명: {data['get_metadata']['module']}
+- SHA-256: {data['get_metadata']['sha256']}
 
 <VirusTotal 상세 정보>
 - MD5: {data['virustotal']['hashes']['md5']}
-- SHA-1: {data['virustotal']['hashes'].get('sha1', '—')}
+- SHA-1: {data['virustotal']['hashes'].get('sha1','—')}
 - SHA-256: {data['virustotal']['hashes']['sha256']}
-- Vhash: {data['virustotal']['hashes'].get('vhash', '—')}
+- Vhash: {data['virustotal']['hashes'].get('vhash','—')}
 - File type: {data['virustotal']['file_type']}
 - Magic: {data['virustotal']['magic']}
 - File size: {data['virustotal']['file_size']} bytes
-- TrID 상위 3개: {', '.join(f"{t['file_type']} ({t['probability']}%)" for t in data['virustotal'].get('trid', [])[:3])}
-- Detect It Easy: {data['virustotal']['analysis'].get('detectiteasy', {}).get('result', '—')}
-- Magika: {data['virustotal']['analysis'].get('magika', {}).get('result', '—')}
-- Packer: {data['virustotal'].get('packer', '—')}
+- TrID 상위 3개: {', '.join(f"{t['file_type']} ({t['probability']}%)" for t in data['virustotal'].get('trid',[])[:3])}
+- Detect It Easy: {data['virustotal']['analysis'].get('detectiteasy',{}).get('result','—')}
+- Magika: {data['virustotal']['analysis'].get('magika',{}).get('result','—')}
+- Packer: {data['virustotal'].get('packer','—')}
 
-위 정보를 참고하여 **파일의 기본 속성(해시·파일타입·매직·크기)과  
-백신 엔진별 탐지 결과**를 자연어로 요약해 설명해주세요.
+위 정보를 참고하여 파일의 기본 속성과 백신 엔진별 탐지 결과를 한글로 요약해주세요.
 """,
         2: f"""
 ② 정적 분석
-
-(1) PE 헤더 정보
-- 형식: {data['pe_headers'].get('file_type', '')} {data['pe_headers'].get('machine', '')}
-- 크기: {data['get_metadata'].get('size', '')} bytes
-- 섹션 목록: {', '.join([s.get('name', '') for s in data['pe_headers'].get('sections', [])])}
-
-(2) 문자열 (Strings)
-- 총 문자열 수: {data["string_stats"].get('string_count', '')}
-- 탐지된 C&C 문자열(도메인/URL 포함): 추후 정제 필요
-
-(3) Entry Point 지점
-- Entry Point Address: {data.get('get_entry_points')[0].get('address', '') if data.get('get_entry_points') else ''}
-- Entry Point Name: {data.get('get_entry_points')[0].get('name', '') if data.get('get_entry_points') else ''}
-
-(4) 난독화 및 패킹 여부
-- 섹션 엔트로피 평균: {data['file_entropy']}
-- 패커 탐지 결과: 추후 반영 필요
-
-(5) YARA 룰 매칭
-- 탐지된 룰 수: {len(data['yara_rules']) if isinstance(data['yara_rules'], list) else 1}
+- PE 헤더: {data['pe_headers'].get('file_type','')} | {data['pe_headers'].get('machine','')}
+- 크기: {data['get_metadata'].get('fileSize','')} bytes
+- 섹션 목록: {', '.join(s.get('name','') for s in data['pe_headers'].get('sections',[]))}
+- 문자열 개수: {data['string_stats'].get('string_count','')}
+- Entry Point: {data.get('get_entry_points',[{}])[0].get('address','')} / {data.get('get_entry_points',[{}])[0].get('name','')}
+- 엔트로피: {data['file_entropy']}
 """,
         3: """
 ③ 동적 분석
-- 악성코드 실행 시 생성된 프로세스 정보 확인
-- 레지스트리 키 조작 여부 확인
-- 파일 생성/수정/삭제 이벤트 확인
-- 위 행위들의 로그를 시간대별로 정리
+- 프로세스 정보, 레지스트리 변경, 파일 이벤트 로그를 시간대별로 정리해주세요.
 """,
         4: """
 ④ Call Graph
-- 함수 호출 관계를 시각적으로 표현한 HTML 파일 생성됨
-- 분석가가 내부 로직 흐름을 빠르게 파악할 수 있음
+- 함수 호출 관계 시각화 HTML이 생성되었습니다.
+- 플랫폼에서 제공되는 그래프를 통해 내부 로직 흐름을 설명해주세요.
 """,
-        5: """
-⑤ 클러스터링
-- 유사한 악성코드 샘플들을 클러스터링하여 그룹화
+        5: f"""
+⑤ MITRE ATT&CK 매핑
+- 감지된 기술: {data['MITRE']}
+- 각 기술별 한 줄 설명: 예) [T1082] System Information Discovery: 시스템 정보를 수집하는 기술
+- 종합 동작 과정을 자세히 기술해주세요.
 """,
         6: f"""
-⑥ MITRE ATT&CK 매핑
-- 감지된 기술: {data['MITRE']}
-- 각 기술 설명: 예) [T1082] "System Information Discovery": 시스템 정보를 수집하는 기술
-- 전체 동작 과정을 자세히 설명
-""",
-        7: f"""
-⑦ CWE 매핑
-- 매핑된 CWE ID 설명 및 매핑 기준: {format_cwe(data['CWE'])}
-- 전체 동작 과정을 자세히 설명
+⑥ CWE 매핑
+- 매핑된 CWE: 
+{format_cwe(data['CWE'])}
+- 상위 매핑 기준과 전체 동작 과정을 설명해주세요.
 """
     }
 
@@ -297,10 +280,10 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 당신은 악성코드 분석 전문가입니다. 아래 요구사항에 따라 한글로 작성해주세요.
 
 <분석 대상 개요>
-- 파일명: {data['get_metadata'].get('module')}
-- SHA-256: {data['get_metadata'].get('sha256')}
-- 형식: {data['get_metadata'].get('fileType')}
-- 크기: {data['get_metadata'].get('fileSize')}
+- 파일명: {data.get('get_metadata', {}).get('module', '—')}
+- SHA-256: {data.get('get_metadata', {}).get('sha256', '—')}
+- 형식: {data.get('get_metadata', {}).get('fileType', '—')}
+- 크기: {data.get('get_metadata', {}).get('fileType', '—')} bytes
 
 <{title}>
 {body}
@@ -317,8 +300,10 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
         raise HTTPException(status_code=500, detail=f"GPT 요청 실패: {e}")
 
     text = resp.choices[0].message.content.strip()
+    # Information 섹션은 virustotal 정보도 함께
     if req.sectionId == 1:
         return JSONResponse(content={"text": text, "virustotal": data["virustotal"]})
+    # Call Graph 섹션은 그래프 HTML 경로도 함께
     if req.sectionId == 4:
         base = data["get_metadata"]["module"].rsplit(".", 1)[0]
         return JSONResponse(content={"text": text, "callgraph_html": f"/static/callgraphs/{base}.html"})
@@ -339,7 +324,7 @@ def get_capa_report(req: CapaRequest = Body(...)):
     prompt = "아래는 CAPA 분석 도구가 출력한 JSON 결과입니다...\n"
     try:
         resp = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "당신은 숙련된 악성코드 분석가입니다。"},
                 {"role": "user", "content": prompt}
@@ -359,3 +344,11 @@ def start_run_monitor():
         subprocess.Popen(["python", "run_monitor.py"])
     except Exception as e:
         print(f"run_monitor 자동 실행 실패: {e}")
+        
+
+@app.get("/api/download/report/{uuid}")
+def download_report(uuid: str):
+    path = os.path.join(AFTER_DIR, f"{uuid}_dynamic.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
+    return FileResponse(path, filename=f"{uuid}_dynamic.json")

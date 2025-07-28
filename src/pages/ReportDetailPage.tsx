@@ -75,6 +75,8 @@ export default function ReportDetailPage() {
       .finally(() => setDynLoading(false))
   }, [filename])
 
+
+  
   // download JSON
   const downloadJson = () => {
     if (!report) return
@@ -229,26 +231,37 @@ export default function ReportDetailPage() {
             </div>
           </div>
         </section>
-
-        {/* 🧠 GPT 동적 요약 */}
+                
+        {/* ③ 동적 분석 */}
         <section>
-          <h3 className="text-xl font-bold mb-4">🧠 GPT 분석 요약</h3>
-          <div className="border border-gray-300 rounded-lg p-4 bg-gray-50 text-sm">
-            {dynLoading ? (
-              <p>요약 정보를 불러오는 중...</p>
-            ) : dynError ? (
-              <p className="text-red-500">{dynError}</p>
-            ) : dynSummary.length === 0 ? (
-              <p>요약 결과가 없습니다.</p>
-            ) : (
-              <ul className="list-disc list-inside space-y-1">
-                {dynSummary.map((line, idx) => (
-                  <li key={idx}>{line}</li>
-                ))}
-              </ul>
-            )}
+          {/* 🔷 제목 + 다운로드 버튼을 나란히 표시 */}
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold">③ 동적 분석</h3>
+
+            <button
+              onClick={() => {
+                const cleanName = filename?.replace(/\.exe|\.dll/, '')
+                if (cleanName)
+                  window.open(`http://localhost:8000/api/download/report/${cleanName}`)
+              }}
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            >
+              📄 JSON 리포트 다운로드
+            </button>
           </div>
+
+          {/* 설명 */}
+          <p className="text-sm mb-4">
+            동적 분석을 통해 악성코드가 실행 중에 어떤 행동을 하는지 파악하기 위해 프로세스 정보, 레지스트리 변경, 파일 이벤트 로그를 시간대별로 정리하였습니다. 아래는 가상의 예시입니다.
+          </p>
+
+          {/* 동적 분석 본문 (report.dynamic_log 가정) */}
+          <pre className="bg-gray-50 p-4 border rounded text-sm whitespace-pre-wrap">
+            {report.dynamic_log ?? '// 동적 분석 결과가 없습니다.'}
+          </pre>
         </section>
+
+
 
         {/* 뒤로 가기 */}
         <div className="flex justify-center">
@@ -263,3 +276,5 @@ export default function ReportDetailPage() {
     </Layout>
   )
 }
+
+

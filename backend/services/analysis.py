@@ -14,7 +14,7 @@ from .extract_pe_headers import extract_headers
 from .CAPA import map_mitre
 from .CWE.map_CWE import analyze_code_with_cwe
 # Virustotal 연동
-from services.virustotal import get_vt_data
+from services.virustotal.vt_service import get_vt_data
 
 # IDA 및 MCP 설정
 IDA_PATH   = r"C:\Program Files\IDA Professional 9.1\ida.exe"
@@ -114,3 +114,4 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
     }
     
     return report
+
