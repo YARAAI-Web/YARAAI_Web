@@ -26,6 +26,7 @@ from services.suricata.suricata_extractor import extract_rules_from_meta
 from routes import report_sections 
 from services.dynamic.gpt_summary import generate_full_summary_with_split
 
+
 # 🔐 환경 변수 로드
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))

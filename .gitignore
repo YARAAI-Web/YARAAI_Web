@@ -8,6 +8,7 @@ venv/
 env/
 .env
 backend/.env
+backend/.venv
 
 # 업로드된 파일
 backend/uploads/

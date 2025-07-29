@@ -593,32 +593,6 @@ export default function AnalysisPage() {
                     </pre>
                   </div>
                 )}
-                <button
-                  onClick={() => setShowPeDetails((v) => !v)}
-                  className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
-                >
-                  {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
-                </button>
-                {showPeDetails && (
-                  <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
-                    <div>
-                      <strong>Import DLL:</strong>{' '}
-                      {Array.isArray(data.pe_headers.imports)
-                        ? data.pe_headers.imports.map((s) => s.dll).join(', ')
-                        : 'N/A'}
-                    </div>
-                    <div>
-                      <strong>섹션 개수:</strong>{' '}
-                      {data.pe_headers.number_of_sections ?? 'N/A'}
-                    </div>
-                    <div>
-                      <strong>섹션 정보:</strong>{' '}
-                      {Array.isArray(data.pe_headers.sections)
-                        ? data.pe_headers.sections.map((s) => s.name).join(', ')
-                        : 'N/A'}
-                    </div>
-                  </div>
-                )}
               </>
             ) : currentSection === 2 ? (
               /* ③ 동적 분석 */
