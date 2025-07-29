@@ -23,3 +23,15 @@ backend/services/CAPA/capa_json/
 
 # 분석 메타 JSON
 backend/meta_json/
+
+# ── Python bytecode ─────────────────────────────────────────────────────────
+**/__pycache__/
+*.py[cod]
+
+# ── Node artifacts & Vite cache ─────────────────────────────────────────────
+node_modules/
+.vite/
+
+# ── Build outputs ────────────────────────────────────────────────────────────
+dist/
+build/

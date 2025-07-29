@@ -32,13 +32,13 @@ interface AnalysisResult {
 }
 
 const SECTIONS = [
-  "① Information",
-  "② 정적 분석",
-  "③ 동적 분석",
-  "④ Call Graph",
-  "⑤ 클러스터링",
-  "⑥ MITRE ATT&CK",
-  "⑦ CWE"
+  '① Information',
+  '② 정적 분석',
+  '③ 동적 분석',
+  '④ Call Graph',
+  '⑤ 클러스터링',
+  '⑥ MITRE ATT&CK',
+  '⑦ CWE',
 ]
 
 export default function AnalysisPage() {
@@ -93,8 +93,8 @@ export default function AnalysisPage() {
 
       axios
         .get<AnalysisResult>(`/reports/${filename}`)
-        .then(res => setData(res.data))
-        .catch(err => setError(err.response?.data?.detail || err.message))
+        .then((res) => setData(res.data))
+        .catch((err) => setError(err.response?.data?.detail || err.message))
         .finally(() => setLoading(false))
 
       return
@@ -103,7 +103,7 @@ export default function AnalysisPage() {
     let nowStr = new Date().toLocaleString()
     axios
       .get<AnalysisResult>(`/reports/${filename}`)
-      .then(res => {
+      .then((res) => {
         setData(res.data)
         nowStr = new Date().toLocaleString()
         setSubmissionDate(nowStr)
@@ -115,17 +115,17 @@ export default function AnalysisPage() {
                 sectionId: idx + 1,
                 filename,
               })
-              .then(r => r.data.text)
+              .then((r) => r.data.text)
               .catch(() => '(불러오기 실패)')
           })
         )
       })
-      .then(texts => {
+      .then((texts) => {
         setAllTexts(texts)
         sessionStorage.setItem(keySections, JSON.stringify(texts))
         sessionStorage.setItem(keyDate, nowStr)
       })
-      .catch(err => setError(err.response?.data?.detail || err.message))
+      .catch((err) => setError(err.response?.data?.detail || err.message))
       .finally(() => setLoading(false))
   }, [filename, location.state])
 
@@ -196,9 +196,15 @@ export default function AnalysisPage() {
         style={{ position: 'absolute', top: -9999, left: -9999, width: 800 }}
       >
         <div className="header">
-          <div><strong>Name:</strong> {filename}</div>
-          <div><strong>SHA-256:</strong> {data.get_metadata.sha256}</div>
-          <div><strong>Submission Date:</strong> {submissionDate}</div>
+          <div>
+            <strong>Name:</strong> {filename}
+          </div>
+          <div>
+            <strong>SHA-256:</strong> {data.get_metadata.sha256}
+          </div>
+          <div>
+            <strong>Submission Date:</strong> {submissionDate}
+          </div>
         </div>
         {SECTIONS.map((section, idx) => (
           <div key={idx}>
@@ -228,9 +234,15 @@ export default function AnalysisPage() {
             </div>
             <div className="flex-1 pl-6 space-y-2">
               <div className="space-y-1 text-sm">
-                <div><strong>Name:</strong> {filename}</div>
-                <div><strong>SHA-256:</strong> {data.get_metadata.sha256}</div>
-                <div><strong>Submission Date:</strong> {submissionDate}</div>
+                <div>
+                  <strong>Name:</strong> {filename}
+                </div>
+                <div>
+                  <strong>SHA-256:</strong> {data.get_metadata.sha256}
+                </div>
+                <div>
+                  <strong>Submission Date:</strong> {submissionDate}
+                </div>
               </div>
             </div>
             <div className="flex flex-col gap-2 ml-4 mt-1">
@@ -288,14 +300,12 @@ export default function AnalysisPage() {
             ) : currentSection === 1 ? (
               <>
                 {/* ② 정적 분석의 본문 */}
-                <pre className="whitespace-pre-wrap">
-                  {allTexts[1]}
-                </pre>
+                <pre className="whitespace-pre-wrap">{allTexts[1]}</pre>
 
                 {/* ↘ 여기, 본문 바로 아래에 토글 버튼 */}
                 <div className="mt-4">
                   <button
-                    onClick={() => setShowPeDetails(v => !v)}
+                    onClick={() => setShowPeDetails((v) => !v)}
                     className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
                   >
                     {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
@@ -306,7 +316,7 @@ export default function AnalysisPage() {
                     <div>
                       <strong>Import DLL:</strong>{' '}
                       {Array.isArray(data.pe_headers.imports)
-                        ? data.pe_headers.imports.map(s => s.dll).join(', ')
+                        ? data.pe_headers.imports.map((s) => s.dll).join(', ')
                         : 'N/A'}
                     </div>
                     <div>
@@ -316,7 +326,7 @@ export default function AnalysisPage() {
                     <div>
                       <strong>섹션 정보:</strong>{' '}
                       {Array.isArray(data.pe_headers.sections)
-                        ? data.pe_headers.sections.map(s => s.name).join(', ')
+                        ? data.pe_headers.sections.map((s) => s.name).join(', ')
                         : 'N/A'}
                     </div>
                   </div>
