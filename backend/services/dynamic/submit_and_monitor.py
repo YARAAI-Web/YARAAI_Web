@@ -15,6 +15,7 @@ REMOTE_INPUT_DIR = "/home/cuckoo/files_input/"
 CUCKOO_API = f"http://{VM1_IP}:8090"
 
 LOCAL_RESULT_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
+AFTER_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
 
 def analyze_dynamically(filepath):
     print(f"[🚀] 동적 분석 시작: {filepath}")
@@ -65,6 +66,13 @@ def wait_for_report(ssh, task_id, file_uuid, timeout=600):
             sftp.stat(remote_report)
             sftp.get(remote_report, local_json_path)
             print(f"[📥] 분석 결과 저장 완료 → {local_json_path}")
+
+            # ✅ 여기서 JSON 분리
+            from services.dynamic.split_report import split_report_sections
+            with open(local_json_path, encoding="utf-8") as f:
+                report_json = json.load(f)
+            split_report_sections(report_json, file_uuid, AFTER_DIR)
+
             break
         except FileNotFoundError:
             time.sleep(5)
@@ -115,3 +123,13 @@ def ensure_cuckoo_running():
         time.sleep(10)  # 대기
     else:
         print("[✅] Cuckoo 이미 실행 중.")
+
+from services.dynamic.split_report import split_report_sections
+
+# # ✅ 분석 완료 후 report.json 경로
+# report_path = os.path.join(AFTER_DIR, f"{file_uuid}_dynamic.json")
+# with open(report_path, encoding="utf-8") as f:
+#     report_json = json.load(f)
+
+# # ✅ 섹션별 JSON으로 분리 저장
+# split_report_sections(report_json, file_uuid, AFTER_DIR)
