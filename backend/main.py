@@ -23,6 +23,7 @@ from services.virustotal.vt_service import get_vt_data
 from routes import dynamic_summary, check_report
 from routes.download_report import router as report_router
 from services.suricata.suricata_extractor import extract_rules_from_meta
+from routes import report_sections 
 
 # 🔐 환경 변수 로드
 load_dotenv()
@@ -36,6 +37,7 @@ META_DIR      = os.path.join(BASE_DIR, "meta_json")
 STATIC_DIR    = os.path.join(BASE_DIR, "static", "callgraphs")
 CAPA_JSON_DIR = os.path.join(BASE_DIR, "services", "CAPA", "capa_json")
 BEFORE_DIR    = r"C:\Users\hyunj\analysis_yaraai\before"
+AFTER_DIR     = r"C:\Users\hyunj\analysis_yaraai\after"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(META_DIR, exist_ok=True)
@@ -67,6 +69,7 @@ app.add_middleware(
 app.include_router(check_report.router)
 app.include_router(dynamic_summary.router)
 app.include_router(report_router)
+app.include_router(report_sections.router)
 
 # 정적 파일 서빙
 app.mount("/static", StaticFiles(directory="static"), name="static")

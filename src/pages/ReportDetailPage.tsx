@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Layout from '../components/Layout'
+import SummarySection from '../dynamic/summarysection'
 
 interface FullReport {
   get_metadata?: {
@@ -237,7 +238,6 @@ export default function ReportDetailPage() {
           {/* 🔷 제목 + 다운로드 버튼을 나란히 표시 */}
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold">③ 동적 분석</h3>
-
             <button
               onClick={() => {
                 const cleanName = filename?.replace(/\.exe|\.dll/, '')
@@ -251,14 +251,15 @@ export default function ReportDetailPage() {
           </div>
 
           {/* 설명 */}
-          <p className="text-sm mb-4">
-            동적 분석을 통해 악성코드가 실행 중에 어떤 행동을 하는지 파악하기 위해 프로세스 정보, 레지스트리 변경, 파일 이벤트 로그를 시간대별로 정리하였습니다. 아래는 가상의 예시입니다.
+          <p className="text-sm mb-4 text-gray-700">
+            동적 분석 결과는 실제 악성코드가 실행되면서 발생한 행동을 분석한 내용을 포함합니다. 아래는 주요 행위 요약 정보이며, 탭 별로 상세 정보를 확인할 수 있도록 구성 예정입니다.
           </p>
 
-          {/* 동적 분석 본문 (report.dynamic_log 가정) */}
-          <pre className="bg-gray-50 p-4 border rounded text-sm whitespace-pre-wrap">
-            {report.dynamic_log ?? '// 동적 분석 결과가 없습니다.'}
-          </pre>
+          {/* 섹션 요약 출력 */}
+          <div className="mt-4">
+            <h4 className="text-lg font-semibold mb-2">📄 요약 정보 (Summary)</h4>
+            <SummarySection uuid={filename?.replace(/\.exe|\.dll/, '') || ''} />
+          </div>
         </section>
 
 
