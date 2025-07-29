@@ -1,12 +1,10 @@
-import openai
 import os
 import json
+from typing import List
+import openai
 
-# 🔐 OpenAI API 설정
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# ✅ GPT 호출 함수 (GPT-4 Turbo + Prompt 전략 반영)
 def query_gpt(json_input: dict, section_prompt: str, section_title: str) -> str:
     input_str = json.dumps(json_input, ensure_ascii=False, indent=2)
     messages = [
@@ -30,39 +28,16 @@ def query_gpt(json_input: dict, section_prompt: str, section_title: str) -> str:
     )
     return response["choices"][0]["message"]["content"]
 
-# ✅ 기본 필드 보정 및 스크린샷 정리
-def prepare_json(report_json: dict):
-    report_json.setdefault("behavior", {"processes": []})
-    report_json.setdefault("network", {})
-    report_json.setdefault("static", {})
-    report_json.setdefault("target", {})
-    report_json.setdefault("signatures", [])
 
-    try:
-        report_id = report_json.get("info", {}).get("id") or report_json.get("target", {}).get("file", {}).get("sha256")
-        if report_id:
-            base_dir = os.getenv("CUCKOO_AFTER_DIR", r"C:\\Users\\hyunj\\analysis_yaraai\\after")
-            matched_dir = next((d for d in os.listdir(base_dir) if str(report_id) in d and d.endswith("_shots")), None)
-            if matched_dir:
-                screenshot_dir = os.path.join(base_dir, matched_dir)
-                report_json["screenshots"] = sorted([
-                    os.path.join(matched_dir, f) for f in os.listdir(screenshot_dir)
-                    if f.lower().endswith(('.jpg', '.jpeg', '.png'))
-                ])
-            else:
-                report_json["screenshots"] = []
-    except:
-        report_json["screenshots"] = []
-
-    return report_json
-
-# ✅ 전체 요약 생성 함수
-def generate_summary_from_dynamic_report(report_json: dict) -> list:
-    report_json = prepare_json(report_json)
+def generate_summary_from_split_json(uuid: str, base_dir: str) -> List[str]:
     results = []
 
     # [1] Summary
-    prompt_1 = """
+    summary_path = os.path.join(base_dir, f"{uuid}_summary.json")
+    if os.path.exists(summary_path):
+        with open(summary_path, encoding="utf-8") as f:
+            summary_data = json.load(f)
+        prompt = """
 📄 [1] Summary – Basic Static Information
 
 Summarize the following fields into a clean Korean table:
@@ -73,11 +48,14 @@ Summarize the following fields into a clean Korean table:
 
 Output in Korean. Use a plain-text table. No markdown.
 """
-    input_1 = { "target": report_json["target"], "static": report_json["static"] }
-    results.append(query_gpt(input_1, prompt_1, "[1] Summary"))
+        results.append(query_gpt(summary_data, prompt, "[1] Summary"))
 
     # [2] Signatures
-    prompt_2 = """
+    sig_path = os.path.join(base_dir, f"{uuid}_signatures.json")
+    if os.path.exists(sig_path):
+        with open(sig_path, encoding="utf-8") as f:
+            sig_data = json.load(f)
+        prompt = """
 🛑 [2] Signatures – Detected Malicious Behaviors
 
 Categorize signatures by severity:
@@ -92,11 +70,17 @@ For each group, summarize in Korean:
 
 Output must be in Korean, grouped by severity level.
 """
-    input_2 = { "signatures": report_json["signatures"] }
-    results.append(query_gpt(input_2, prompt_2, "[2] Signatures"))
+        results.append(query_gpt(sig_data, prompt, "[2] Signatures"))
 
-    # [3] Behavior – Process-wise
-    prompt_3 = """
+    # [3] Behavior (multi-part 지원)
+    part_num = 1
+    while True:
+        part_path = os.path.join(base_dir, f"{uuid}_behavior_part_{part_num}.json")
+        if not os.path.exists(part_path):
+            break
+        with open(part_path, encoding="utf-8") as f:
+            behavior_data = json.load(f)
+        prompt = """
 📂 [3] Behavior – Process-level Activity Summary
 
 For each process, summarize the following:
@@ -116,14 +100,15 @@ Output format:
 
 Respond only in Korean. Max 5 lines per process.
 """
-    processes = report_json["behavior"]["processes"]
-    for i in range(0, len(processes), 10):
-        chunk = processes[i:i+10]
-        input_3 = { "behavior": { "processes": chunk } }
-        results.append(query_gpt(input_3, prompt_3, f"[3] Behavior (Part {i//10 + 1})"))
+        results.append(query_gpt(behavior_data, prompt, f"[3] Behavior (Part {part_num})"))
+        part_num += 1
 
     # [4] Network
-    prompt_4 = """
+    network_path = os.path.join(base_dir, f"{uuid}_network.json")
+    if os.path.exists(network_path):
+        with open(network_path, encoding="utf-8") as f:
+            net_data = json.load(f)
+        prompt = """
 🌐 [4] Network – Network Behavior Summary
 
 From the 'network' section, summarize in Korean:
@@ -134,11 +119,14 @@ From the 'network' section, summarize in Korean:
 
 Respond only in Korean. Use bullet points.
 """
-    input_4 = { "network": report_json["network"] }
-    results.append(query_gpt(input_4, prompt_4, "[4] Network"))
+        results.append(query_gpt(net_data, prompt, "[4] Network"))
 
     # [5] Screenshots
-    prompt_5 = """
+    shot_path = os.path.join(base_dir, f"{uuid}_screenshots.json")
+    if os.path.exists(shot_path):
+        with open(shot_path, encoding="utf-8") as f:
+            shot_data = json.load(f)
+        prompt = """
 📷 [5] Screenshots – Visual Behavior Summary
 
 For each screenshot filename:
@@ -152,11 +140,13 @@ Format example:
 If no screenshots, return: "스크린샷 없음"
 Respond only in Korean. No markdown.
 """
-    input_5 = { "screenshots": report_json.get("screenshots", []) }
-    results.append(query_gpt(input_5, prompt_5, "[5] Screenshots"))
+        results.append(query_gpt(shot_data, prompt, "[5] Screenshots"))
 
     # [6] Final Summary
-    prompt_6 = """
+    try:
+        with open(summary_path, encoding="utf-8") as f:
+            all_data = json.load(f)
+        prompt = """
 🔎 [6] Expert Summary – Executive Report
 
 Based on all sections, write a final Korean report:
@@ -170,11 +160,37 @@ Based on all sections, write a final Korean report:
 Structure it like a report to a SOC team. Use numbered bullet points.
 Respond in Korean. No markdown.
 """
-    results.append(query_gpt(report_json, prompt_6, "[6] Final Summary"))
+        results.append(query_gpt(all_data, prompt, "[6] Final Summary"))
+    except:
+        results.append("[6] Final Summary: 요약 불가 (summary.json 없음)")
+    
+    
+    
+    # [7] Output – Dropped files & PCAP
+    output_path = os.path.join(base_dir, f"{uuid}_metadata_output.json")
+    if os.path.exists(output_path):
+        with open(output_path, encoding="utf-8") as f:
+            output_data = json.load(f)
 
+        prompt = """
+📦 [7] Dropped Files & Network PCAP
+
+다음은 샌드박스 실행 중 생성된 PCAP 및 드롭 파일 목록입니다.
+아래 정보를 바탕으로 시스템에 어떤 위협 요소가 있었는지 분석 요약을 작성하세요:
+
+1. PCAP 파일 이름 및 SHA256 해시
+2. 드롭된 파일 수와 각 파일의 이름, SHA256 해시
+3. 드롭된 파일의 특징 (예: 실행 파일, 이미지, DLL 등)
+4. 이상 징후가 보이는 항목이 있으면 간단히 언급
+
+응답은 반드시 한국어로 작성하고, 목록이나 표 형식을 사용하세요.
+마크다운 없이 깔끔한 일반 텍스트로만 출력해주세요.
+"""
+        results.append(query_gpt(output_data, prompt, "[7] Output"))   
+    
     return results
 
-# ✅ 외부용 호출 함수
-def generate_full_summary_with_split(report_json: dict, after_dir: str) -> list:
-    report_json = prepare_json(report_json)
-    return generate_summary_from_dynamic_report(report_json)
+
+# 🔄 외부에서 호출
+def generate_full_summary_with_split(uuid: str, after_dir: str) -> list:
+    return generate_summary_from_split_json(uuid, after_dir)
