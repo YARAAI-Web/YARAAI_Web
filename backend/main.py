@@ -115,12 +115,12 @@ async def upload_and_analyze(file: UploadFile = File(...)):
         analyze_path = dest_path
         print(f"[ℹ️] 패커 없음 → 원본 사용")  # 🔁
 
-    #  # ✅ 동적 분석용 디렉토리에 복사
-    # try:
-    #     before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
-    #     shutil.copy2(analyze_path, before_path)
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")
+     # ✅ 동적 분석용 디렉토리에 복사
+    try:
+        before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
+        shutil.copy2(analyze_path, before_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")
 
     # 2) 정적/동적 분석
     try:
@@ -339,18 +339,18 @@ def get_capa_report(req: CapaRequest = Body(...)):
 
     return JSONResponse(content={"report": resp.choices[0].message.content.strip()})
 
-# # 동적 분석 자동 실행
-# @app.on_event("startup")
-# def start_run_monitor():
-#     try:
-#         subprocess.Popen(["python", "run_monitor.py"])
-#     except Exception as e:
-#         print(f"run_monitor 자동 실행 실패: {e}")
+# 동적 분석 자동 실행
+@app.on_event("startup")
+def start_run_monitor():
+    try:
+        subprocess.Popen(["python", "run_monitor.py"])
+    except Exception as e:
+        print(f"run_monitor 자동 실행 실패: {e}")
 
 
-# @app.get("/api/download/report/{uuid}")
-# def download_report(uuid: str):
-#     path = os.path.join(AFTER_DIR, f"{uuid}_dynamic.json")
-#     if not os.path.exists(path):
-#         raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
-#     return FileResponse(path, filename=f"{uuid}_dynamic.json")
+@app.get("/api/download/report/{uuid}")
+def download_report(uuid: str):
+    path = os.path.join(AFTER_DIR, f"{uuid}_dynamic.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
+    return FileResponse(path, filename=f"{uuid}_dynamic.json")
