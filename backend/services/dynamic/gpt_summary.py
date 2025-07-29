@@ -163,7 +163,31 @@ Respond in Korean. No markdown.
         results.append(query_gpt(all_data, prompt, "[6] Final Summary"))
     except:
         results.append("[6] Final Summary: 요약 불가 (summary.json 없음)")
+    
+    
+    
+    # [7] Output – Dropped files & PCAP
+    output_path = os.path.join(base_dir, f"{uuid}_metadata_output.json")
+    if os.path.exists(output_path):
+        with open(output_path, encoding="utf-8") as f:
+            output_data = json.load(f)
 
+        prompt = """
+📦 [7] Dropped Files & Network PCAP
+
+다음은 샌드박스 실행 중 생성된 PCAP 및 드롭 파일 목록입니다.
+아래 정보를 바탕으로 시스템에 어떤 위협 요소가 있었는지 분석 요약을 작성하세요:
+
+1. PCAP 파일 이름 및 SHA256 해시
+2. 드롭된 파일 수와 각 파일의 이름, SHA256 해시
+3. 드롭된 파일의 특징 (예: 실행 파일, 이미지, DLL 등)
+4. 이상 징후가 보이는 항목이 있으면 간단히 언급
+
+응답은 반드시 한국어로 작성하고, 목록이나 표 형식을 사용하세요.
+마크다운 없이 깔끔한 일반 텍스트로만 출력해주세요.
+"""
+        results.append(query_gpt(output_data, prompt, "[7] Output"))   
+    
     return results
 
 

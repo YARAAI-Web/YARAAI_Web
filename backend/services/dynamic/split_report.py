@@ -46,4 +46,11 @@ def split_report_sections(report_json: dict, uuid: str, output_dir: str, chunk_s
         with open(path, "w", encoding="utf-8") as f:
             json.dump(value, f, ensure_ascii=False, indent=2)
 
+    # 💾 metadata.output 저장
+    metadata_output = report_json.get("metadata", {}).get("output", {})
+    output_path = os.path.join(output_dir, f"{uuid}_metadata_output.json")
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(metadata_output, f, ensure_ascii=False, indent=2)
+
+
     return sections

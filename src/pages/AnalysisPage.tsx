@@ -315,10 +315,40 @@ export default function AnalysisPage() {
         {/* 헤더 */}
         <div className="px-8 pt-4 pb-0">
           <div className="max-w-5xl mx-auto relative flex bg-white p-2 items-start gap-6">
-            <div className="w-[200px] bg-orange-500 text-white font-bold text-center text-lg rounded-md p-2">
-              Likely Malicious
-              <span className="mt-1 text-3xl">{data.mal_prob}</span>
-            </div>
+            {/* 악성 확률에 따라 레이블과 퍼센트 표시 */}
+            {(() => {
+              const pct = Number(data.mal_prob) * 100
+              const isMalicious = pct >= 50
+              const label = isMalicious ? 'Malicious' : 'Benign'
+              const color = isMalicious ? '#dc2626' : '#2563eb' // 빨강 또는 파랑
+
+              return (
+                <div
+                  style={{
+                    width: 200,
+                    textAlign: 'center',
+                    fontSize: '1rem',
+                    padding: '0.5rem',
+                  }}
+                >
+                  {/* 레이블 */}
+                  <span style={{ color, fontWeight: 700, fontSize: '1.5rem' }}>
+                    {label}
+                  </span>
+                  {/* 퍼센트 */}
+                  <div
+                    style={{
+                      marginTop: '0.25rem',
+                      fontSize: '1.125rem',
+                      color: '#333',
+                    }}
+                  >
+                    {pct.toFixed(2)}%
+                  </div>
+                </div>
+              )
+            })()}
+
             <div className="pl-5 space-y-2 text-sm">
               <div>
                 <strong>Name:</strong> {filename}
@@ -330,7 +360,7 @@ export default function AnalysisPage() {
                 <strong>Submission Date:</strong> {submissionDate}
               </div>
             </div>
-            <div className="absolute -top-[20px] right-[30px] grid grid-cols-2 grid-rows-2 gap-[10px]">
+            <div className="absolute top-1/2 right-[30px] transform -translate-y-1/2 grid grid-cols-2 grid-rows-2 gap-[10px]">
               <button
                 onClick={downloadHTML}
                 className="
