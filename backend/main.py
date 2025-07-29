@@ -225,6 +225,7 @@ def fetch_gpt_section(req: SectionRequest = Body(...)):
 - MITRE ATT&CK 기술 (처음 3개): {data['MITRE'][:3]}
 - 모듈명: {data['get_metadata']['module']}
 - SHA-256: {data['get_metadata']['sha256']}
+- 악성 확률: {data['mal_prob']}
 
 <VirusTotal 상세 정보>
 - MD5: {data['virustotal']['hashes']['md5']}
