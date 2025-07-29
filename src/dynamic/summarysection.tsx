@@ -1,26 +1,34 @@
-// src/components/dynamic/SummarySection.tsx
-import { useEffect, useState } from 'react'
-import axios from 'axios'
+// src/dynamic/SummarySection.tsx
 
-export default function SummarySection({ uuid }: { uuid: string }) {
-  const [data, setData] = useState<any | null>(null)
+import React, { useEffect, useState } from 'react'
+
+interface Props {
+  uuid: string
+}
+
+export default function SummarySection({ uuid }: Props) {
+  const [summary, setSummary] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    axios
-      .get(`/api/report/${uuid}/summary`)
-      .then((res) => setData(res.data))
-      .catch(() => setError("요약 정보를 불러오지 못했습니다."))
+    if (!uuid) return
+    setLoading(true)
+    fetch(`http://localhost:8000/api/report/${uuid}/summary-ai`)
+      .then((res) => res.json())
+      .then((data) => setSummary(data.summary || []))
+      .catch(() => setError('요약 정보를 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
   }, [uuid])
 
-  if (loading) return <div className="text-sm text-gray-500">로딩 중...</div>
-  if (error) return <div className="text-sm text-red-500">{error}</div>
+  if (loading) return <p className="text-sm text-gray-500">요약 불러오는 중...</p>
+  if (error) return <p className="text-sm text-red-500">{error}</p>
 
   return (
-    <div className="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded border overflow-x-auto">
-      {JSON.stringify(data, null, 2)}
+    <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 text-sm leading-relaxed space-y-2 whitespace-pre-wrap">
+      {summary.map((line, idx) => (
+        <p key={idx}>{line}</p>
+      ))}
     </div>
   )
 }

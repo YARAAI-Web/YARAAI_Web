@@ -2,10 +2,10 @@ import os
 import json
 
 # ✅ section별 JSON 파일 분리 저장 함수
-def split_report_sections(report_json: dict, uuid: str, output_dir: str):
+def split_report_sections(report_json: dict, uuid: str, output_dir: str, chunk_size: int = 10):
     os.makedirs(output_dir, exist_ok=True)
 
-    # 기본 섹션 저장
+    # 📁 저장할 각 섹션 정의
     sections = {
         "summary": {
             "target": report_json.get("target", {}),
@@ -20,20 +20,25 @@ def split_report_sections(report_json: dict, uuid: str, output_dir: str):
         "screenshots": {
             "screenshots": report_json.get("screenshots", [])
         },
-        "behavior_parts": []
+        "behavior_parts": []  # 나중에 part 번호만 저장
     }
 
-    # behavior를 10개 단위로 나눠서 저장
+    # 🔪 behavior.processes 분할 저장
     processes = report_json.get("behavior", {}).get("processes", [])
-    for i in range(0, len(processes), 10):
-        chunk = processes[i:i + 10]
+    for i in range(0, len(processes), chunk_size):
+        chunk = processes[i:i + chunk_size]
+        part_num = i // chunk_size + 1
         part = {"behavior": {"processes": chunk}}
-        part_path = os.path.join(output_dir, f"{uuid}_behavior_part_{i // 10 + 1}.json")
+        part_filename = f"{uuid}_behavior_part_{part_num}.json"
+        part_path = os.path.join(output_dir, part_filename)
+
         with open(part_path, "w", encoding="utf-8") as f:
             json.dump(part, f, ensure_ascii=False, indent=2)
-        sections["behavior_parts"].append(part_path)
 
-    # 나머지 섹션 저장
+        # 경로 대신 part 번호 저장
+        sections["behavior_parts"].append(part_num)
+
+    # 💾 나머지 섹션 저장
     for key, value in sections.items():
         if key == "behavior_parts":
             continue

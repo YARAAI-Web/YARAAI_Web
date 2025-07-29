@@ -18,12 +18,13 @@ from services.analysis import analyze_file
 from generate_callgraph import generate_call_graph
 from services.suricata.yara_generator import generate_yara_rule
 from services.unpacker import detect_packers, unpack_file
-from services.dynamic.gpt_summary import generate_summary_from_dynamic_report
+# from services.dynamic.gpt_summary import generate_summary_from_dynamic_report
 from services.virustotal.vt_service import get_vt_data
 from routes import dynamic_summary, check_report
 from routes.download_report import router as report_router
 from services.suricata.suricata_extractor import extract_rules_from_meta
 from routes import report_sections 
+from services.dynamic.gpt_summary import generate_full_summary_with_split
 
 # 🔐 환경 변수 로드
 load_dotenv()
