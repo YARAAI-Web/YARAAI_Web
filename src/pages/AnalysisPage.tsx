@@ -179,15 +179,15 @@ export default function AnalysisPage() {
   const downloadHTML = () => {
     if (!htmlRef.current) return
     const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/>
-<title>보고서 - ${baseName}</title>
-<style>
-  body { font-family:'Segoe UI','Malgun Gothic',sans-serif; padding:20px; font-size:14px; }
-  .header { border:2px solid #000; padding:6px; margin-bottom:10px; }
-  h2 { color:#0F3ADA; margin-top:30px; }
-  pre { white-space:pre-wrap; font-family:'Segoe UI','Malgun Gothic',sans-serif; font-weight:350; line-height:1.6; margin-top:8px; }
-  .iframe-container { border:1px solid #ccc; height:500px; }
-</style>
-</head><body>${htmlRef.current.innerHTML}</body></html>`
+  <title>보고서 - ${baseName}</title>
+  <style>
+    body { font-family:'Segoe UI','Malgun Gothic',sans-serif; padding:20px; font-size:14px; }
+    .header { border:2px solid #000; padding:6px; margin-bottom:10px; }
+    h2 { color:#0F3ADA; margin-top:30px; }
+    pre { white-space:pre-wrap; font-family:'Segoe UI','Malgun Gothic',sans-serif; font-weight:350; line-height:1.6; margin-top:8px; }
+    .iframe-container { border:1px solid #ccc; height:500px; }
+  </style>
+  </head><body>${htmlRef.current.innerHTML}</body></html>`
 
     const blob = new Blob([html], { type: 'text/html' })
     saveAs(blob, `${baseName}.html`)
@@ -200,7 +200,15 @@ export default function AnalysisPage() {
     a.download = `${baseName}_suricata.json`
     a.click()
   }
-
+  const downloadDynamic = () => {
+    const url = `/api/download/report/${baseName}`
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${baseName}_dynamic.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
   return (
     <>
       {/* HTML 내보내기용 숨김 영역 */}
@@ -307,10 +315,40 @@ export default function AnalysisPage() {
         {/* 헤더 */}
         <div className="px-8 pt-4 pb-0">
           <div className="max-w-5xl mx-auto relative flex bg-white p-2 items-start gap-6">
-            <div className="w-[200px] bg-orange-500 text-white font-bold text-center text-lg rounded-md p-2">
-              Likely Malicious
-              <span className="mt-1 text-3xl">{data.mal_prob}</span> 
-            </div>
+            {/* 악성 확률에 따라 레이블과 퍼센트 표시 */}
+            {(() => {
+              const pct = Number(data.mal_prob) * 100
+              const isMalicious = pct >= 50
+              const label = isMalicious ? 'Malicious' : 'Benign'
+              const color = isMalicious ? '#dc2626' : '#2563eb' // 빨강 또는 파랑
+
+              return (
+                <div
+                  style={{
+                    width: 200,
+                    textAlign: 'center',
+                    fontSize: '1rem',
+                    padding: '0.5rem',
+                  }}
+                >
+                  {/* 레이블 */}
+                  <span style={{ color, fontWeight: 700, fontSize: '1.5rem' }}>
+                    {label}
+                  </span>
+                  {/* 퍼센트 */}
+                  <div
+                    style={{
+                      marginTop: '0.25rem',
+                      fontSize: '1.125rem',
+                      color: '#333',
+                    }}
+                  >
+                    {pct.toFixed(2)}%
+                  </div>
+                </div>
+              )
+            })()}
+
             <div className="pl-5 space-y-2 text-sm">
               <div>
                 <strong>Name:</strong> {filename}
@@ -322,60 +360,78 @@ export default function AnalysisPage() {
                 <strong>Submission Date:</strong> {submissionDate}
               </div>
             </div>
-            <div className="absolute -top-[20px] right-[30px] flex flex-col space-y-[2px]">
+            <div className="absolute top-1/2 right-[30px] transform -translate-y-1/2 grid grid-cols-2 grid-rows-2 gap-[10px]">
               <button
                 onClick={downloadHTML}
                 className="
-                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
-                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
-                  text-[#FFFFFF]           /* 글자색 흰색 */
-                  font-bold            /* 글자 굵게 */
-                  text-xl              /* 큰 글자 크기 */
-                  transition
-                  px-[20px]                 /* 좌우 여백: 2rem */
-                  py-[7px]                 /* 상하 여백: 1rem */
-                  rounded-full         /* 완전한 pill(캡슐) 모양 */
-                  border-[0.1px]
-                  border-[rgba(0,0,0,0.15)]
-                "
+                    bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                    hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                    text-[#FFFFFF]           /* 글자색 흰색 */
+                    font-bold            /* 글자 굵게 */
+                    text-xl              /* 큰 글자 크기 */
+                    transition
+                    px-[20px]                 /* 좌우 여백: 2rem */
+                    py-[7px]                 /* 상하 여백: 1rem */
+                    rounded-full         /* 완전한 pill(캡슐) 모양 */
+                    border-[0.1px]
+                    border-[rgba(0,0,0,0.15)]
+                  "
               >
                 Report
               </button>
               <button
                 onClick={downloadJSON}
                 className="
-                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
-                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
-                  text-[#FFFFFF]           /* 글자색 흰색 */
-                  font-bold            /* 글자 굵게 */
-                  text-xl              /* 큰 글자 크기 */
-                  transition
-                  px-[20px]                 /* 좌우 여백: 2rem */
-                  py-[7px]                 /* 상하 여백: 1rem */
-                  rounded-full         /* 완전한 pill(캡슐) 모양 */
-                  border-[0.1px]
-                  border-[rgba(0,0,0,0.15)]
-                "
+                    bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                    hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                    text-[#FFFFFF]           /* 글자색 흰색 */
+                    font-bold            /* 글자 굵게 */
+                    text-xl              /* 큰 글자 크기 */
+                    transition
+                    px-[20px]                 /* 좌우 여백: 2rem */
+                    py-[7px]                 /* 상하 여백: 1rem */
+                    rounded-full         /* 완전한 pill(캡슐) 모양 */
+                    border-[0.1px]
+                    border-[rgba(0,0,0,0.15)]
+                  "
               >
                 JSON
               </button>
               <button
                 onClick={downloadSuricataJSON}
                 className="
-                  bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
-                  hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
-                  text-[#FFFFFF]           /* 글자색 흰색 */
-                  font-bold            /* 글자 굵게 */
-                  text-xl              /* 큰 글자 크기 */
-                  transition
-                  px-[20px]                 /* 좌우 여백: 2rem */
-                  py-[7px]                 /* 상하 여백: 1rem */
-                  rounded-full         /* 완전한 pill(캡슐) 모양 */
-                  border-[0.1px]
-                  border-[rgba(0,0,0,0.15)]
-                "
+                    bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                    hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                    text-[#FFFFFF]           /* 글자색 흰색 */
+                    font-bold            /* 글자 굵게 */
+                    text-xl              /* 큰 글자 크기 */
+                    transition
+                    px-[20px]                 /* 좌우 여백: 2rem */
+                    py-[7px]                 /* 상하 여백: 1rem */
+                    rounded-full         /* 완전한 pill(캡슐) 모양 */
+                    border-[0.1px]
+                    border-[rgba(0,0,0,0.15)]
+                  "
               >
                 Suricata
+              </button>
+              <button
+                onClick={downloadDynamic}
+                className="
+                    bg-[#1b65fe]          /* 메인 배경색 (원하시는 색으로) */
+                    hover:bg-[#F2F2F7]    /* 호버 시 색 진해짐 */
+                    text-[#FFFFFF]           /* 글자색 흰색 */
+                    font-bold            /* 글자 굵게 */
+                    text-xl              /* 큰 글자 크기 */
+                    transition
+                    px-[20px]                 /* 좌우 여백: 2rem */
+                    py-[7px]                 /* 상하 여백: 1rem */
+                    rounded-full         /* 완전한 pill(캡슐) 모양 */
+                    border-[0.1px]
+                    border-[rgba(0,0,0,0.15)]
+                  "
+              >
+                Dynamic
               </button>
             </div>
           </div>
@@ -525,7 +581,7 @@ export default function AnalysisPage() {
                   </div>
                 )}
                 <button
-                  onClick={() => setShowYaraRule(v => !v)}
+                  onClick={() => setShowYaraRule((v) => !v)}
                   className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
                 >
                   {showYaraRule ? 'YARA 룰 숨기기' : 'YARA 룰 보기'}
@@ -535,32 +591,6 @@ export default function AnalysisPage() {
                     <pre className="whitespace-pre-wrap font-mono text-sm">
                       {data.yara_rule}
                     </pre>
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowPeDetails((v) => !v)}
-                  className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
-                >
-                  {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
-                </button>
-                {showPeDetails && (
-                  <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
-                    <div>
-                      <strong>Import DLL:</strong>{' '}
-                      {Array.isArray(data.pe_headers.imports)
-                        ? data.pe_headers.imports.map((s) => s.dll).join(', ')
-                        : 'N/A'}
-                    </div>
-                    <div>
-                      <strong>섹션 개수:</strong>{' '}
-                      {data.pe_headers.number_of_sections ?? 'N/A'}
-                    </div>
-                    <div>
-                      <strong>섹션 정보:</strong>{' '}
-                      {Array.isArray(data.pe_headers.sections)
-                        ? data.pe_headers.sections.map((s) => s.name).join(', ')
-                        : 'N/A'}
-                    </div>
                   </div>
                 )}
               </>
