@@ -1,5 +1,18 @@
-/* stylelint-disable */
-/* src/index.css */
+/* index.css */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    font-family: 'Noto Sans KR', ui-sans-serif, system-ui;
+  }
+
+  pre,
+  code {
+    font-family: inherit;
+  }
+}

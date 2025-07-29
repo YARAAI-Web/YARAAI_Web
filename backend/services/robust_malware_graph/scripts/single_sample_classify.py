@@ -74,7 +74,11 @@ def preprocess(
     vocab_size: int = 0,
     use_embeds: bool = True,
 ) -> tuple[Path, str]:
-    """Run preprocessing stages for a single JSON sample."""
+    """Run preprocessing stages for a single JSON sample.
+
+    Returns the path to the generated ``.pt`` graph file along with the sample's
+    SHA256 hash.
+    """
     raw_dir = work_dir / "raw"
     views_dir = work_dir / "data" / "views"
     hetero_dir = work_dir / "data" / "hetero"

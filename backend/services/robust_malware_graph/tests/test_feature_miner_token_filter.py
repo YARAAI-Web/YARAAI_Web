@@ -23,3 +23,16 @@ def test_normalize_and_rank_filters_tokens():
     assert '".rsrc" ascii nocase' not in out
     assert "call:0x401000" not in out
     assert "\"0123456789ABCDEF0123456789ABCDEF\" wide ascii nocase" not in out
+
+
+def test_common_token_sets_filter():
+    miner = FeatureMiner(top_k=1)
+    feats = [
+        "call:memcpy",
+        '"int" ascii nocase',
+        "call:CreateFileW",
+    ]
+    out = miner._normalize_and_rank(feats)
+    assert "call:CreateFileW" in out
+    assert "call:memcpy" not in out
+    assert '"int" ascii nocase' not in out

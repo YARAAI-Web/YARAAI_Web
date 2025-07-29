@@ -1,6 +1,12 @@
 import json
 import types
 import pytest
+
+pytest.importorskip("torch")
+pytest.importorskip("torch_geometric")
+pytest.importorskip("gymnasium")
+pytest.importorskip("evaluation")
+
 from torch_geometric.data import HeteroData
 from src.rulegen.rl_env import RuleGenEnv
 

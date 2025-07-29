@@ -17,11 +17,15 @@ from openai import OpenAI
 from services.analysis import analyze_file
 from generate_callgraph import generate_call_graph
 from services.suricata.yara_generator import generate_yara_rule
-from services.suricata.suricata_extractor import extract_rules_from_meta
 from services.unpacker import detect_packers, unpack_file
-from services.dynamic.gpt_summary import generate_summary_from_dynamic_report
+#from services.dynamic.gpt_summary import generate_summary_from_dynamic_report
 from services.virustotal.vt_service import get_vt_data
-from routes import dynamic_summary, check_report, download__report
+from routes import dynamic_summary, check_report
+from routes.download_report import router as report_router 
+from routes import report_sections  
+from services.suricata.suricata_extractor import extract_rules_from_meta 
+from services.dynamic.gpt_summary import generate_full_summary_with_split
+
 
 # 🔐 환경 변수 로드
 load_dotenv()
@@ -35,6 +39,7 @@ META_DIR      = os.path.join(BASE_DIR, "meta_json")
 STATIC_DIR    = os.path.join(BASE_DIR, "static", "callgraphs")
 CAPA_JSON_DIR = os.path.join(BASE_DIR, "services", "CAPA", "capa_json")
 BEFORE_DIR    = r"C:\Users\hyunj\analysis_yaraai\before"
+AFTER_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(META_DIR, exist_ok=True)
@@ -65,7 +70,8 @@ app.add_middleware(
 
 app.include_router(check_report.router)
 app.include_router(dynamic_summary.router)
-app.include_router(download__report.router)
+app.include_router(report_router)
+app.include_router(report_sections.router)
 
 # 정적 파일 서빙
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -109,12 +115,12 @@ async def upload_and_analyze(file: UploadFile = File(...)):
         analyze_path = dest_path
         print(f"[ℹ️] 패커 없음 → 원본 사용")  # 🔁
 
-     # ✅ 동적 분석용 디렉토리에 복사
-    try:
-        before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
-        shutil.copy2(analyze_path, before_path)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")
+    #  # ✅ 동적 분석용 디렉토리에 복사
+    # try:
+    #     before_path = os.path.join(BEFORE_DIR, os.path.basename(analyze_path))
+    #     shutil.copy2(analyze_path, before_path)
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"before/ 복사 실패: {e}")
 
     # 2) 정적/동적 분석
     try:
@@ -333,18 +339,18 @@ def get_capa_report(req: CapaRequest = Body(...)):
 
     return JSONResponse(content={"report": resp.choices[0].message.content.strip()})
 
-# 동적 분석 자동 실행
-@app.on_event("startup")
-def start_run_monitor():
-    try:
-        subprocess.Popen(["python", "run_monitor.py"])
-    except Exception as e:
-        print(f"run_monitor 자동 실행 실패: {e}")
+# # 동적 분석 자동 실행
+# @app.on_event("startup")
+# def start_run_monitor():
+#     try:
+#         subprocess.Popen(["python", "run_monitor.py"])
+#     except Exception as e:
+#         print(f"run_monitor 자동 실행 실패: {e}")
 
 
-@app.get("/api/download/report/{uuid}")
-def download_report(uuid: str):
-    path = os.path.join(AFTER_DIR, f"{uuid}_dynamic.json")
-    if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
-    return FileResponse(path, filename=f"{uuid}_dynamic.json")
+# @app.get("/api/download/report/{uuid}")
+# def download_report(uuid: str):
+#     path = os.path.join(AFTER_DIR, f"{uuid}_dynamic.json")
+#     if not os.path.exists(path):
+#         raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
+#     return FileResponse(path, filename=f"{uuid}_dynamic.json")

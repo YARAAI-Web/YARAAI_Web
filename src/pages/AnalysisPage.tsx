@@ -468,157 +468,163 @@ export default function AnalysisPage() {
               {SECTIONS[currentSection]}
             </h2>
 
-            {currentSection === 3 ? (
-              <iframe
-                src={`/static/callgraphs/${baseName}.html`}
-                className="w-full h-[800px] border-none rounded"
-                sandbox="allow-scripts allow-same-origin"
-              />
-            ) : currentSection === 0 ? (
-              <>
-                {/* ① Information */}
-                <table className="vt-table mt-4">
-                  <tbody>
-                    <tr>
-                      <th>MD5</th>
-                      <td>{data.virustotal.hashes.md5}</td>
-                    </tr>
-                    <tr>
-                      <th>SHA-1</th>
-                      <td>{data.virustotal.hashes.sha1 ?? '—'}</td>
-                    </tr>
-                    <tr>
-                      <th>SHA-256</th>
-                      <td>{data.virustotal.hashes.sha256}</td>
-                    </tr>
-                    <tr>
-                      <th>Vhash</th>
-                      <td>{data.virustotal.hashes.vhash ?? '—'}</td>
-                    </tr>
-                    <tr>
-                      <th>File type</th>
-                      <td>{data.virustotal.file_type}</td>
-                    </tr>
-                    <tr>
-                      <th>Magic</th>
-                      <td>{data.virustotal.magic}</td>
-                    </tr>
-                    <tr>
-                      <th>File size</th>
-                      <td>
-                        {data.virustotal.file_size.toLocaleString()} bytes
-                      </td>
-                    </tr>
-                    {data.virustotal.trid && (
+            <div className="font-sans text-base leading-relaxed">
+              {currentSection === 3 ? (
+                <iframe
+                  src={`/static/callgraphs/${baseName}.html`}
+                  className="w-full h-[800px] border-none rounded"
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              ) : currentSection === 0 ? (
+                <>
+                  {/* ① Information */}
+                  <table className="vt-table mt-4">
+                    <tbody>
                       <tr>
-                        <th>TrID 상위 3개</th>
+                        <th>MD5</th>
+                        <td>{data.virustotal.hashes.md5}</td>
+                      </tr>
+                      <tr>
+                        <th>SHA-1</th>
+                        <td>{data.virustotal.hashes.sha1 ?? '—'}</td>
+                      </tr>
+                      <tr>
+                        <th>SHA-256</th>
+                        <td>{data.virustotal.hashes.sha256}</td>
+                      </tr>
+                      <tr>
+                        <th>Vhash</th>
+                        <td>{data.virustotal.hashes.vhash ?? '—'}</td>
+                      </tr>
+                      <tr>
+                        <th>File type</th>
+                        <td>{data.virustotal.file_type}</td>
+                      </tr>
+                      <tr>
+                        <th>Magic</th>
+                        <td>{data.virustotal.magic}</td>
+                      </tr>
+                      <tr>
+                        <th>File size</th>
                         <td>
-                          {data.virustotal.trid
-                            .slice(0, 3)
-                            .map(
-                              (t: any) => `${t.file_type} (${t.probability}%)`
-                            )
-                            .join(', ')}
+                          {data.virustotal.file_size.toLocaleString()} bytes
                         </td>
                       </tr>
-                    )}
-                    <tr>
-                      <th>DetectItEasy</th>
-                      <td>
-                        {data.virustotal.analysis.detectiteasy?.result ?? '—'}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Magika</th>
-                      <td>{data.virustotal.analysis.magika?.result ?? '—'}</td>
-                    </tr>
-                    <tr>
-                      <th>Packer</th>
-                      <td>{data.virustotal.packer ?? '—'}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                      {data.virustotal.trid && (
+                        <tr>
+                          <th>TrID 상위 3개</th>
+                          <td>
+                            {data.virustotal.trid
+                              .slice(0, 3)
+                              .map(
+                                (t: any) => `${t.file_type} (${t.probability}%)`
+                              )
+                              .join(', ')}
+                          </td>
+                        </tr>
+                      )}
+                      <tr>
+                        <th>DetectItEasy</th>
+                        <td>
+                          {data.virustotal.analysis.detectiteasy?.result ?? '—'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Magika</th>
+                        <td>
+                          {data.virustotal.analysis.magika?.result ?? '—'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Packer</th>
+                        <td>{data.virustotal.packer ?? '—'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <pre
+                    className="whitespace-pre-wrap"
+                    style={{ fontWeight: 350, lineHeight: '1.6' }}
+                  >
+                    {allTexts[0].split('<VirusTotal')[0].trim()}
+                  </pre>
+                </>
+              ) : currentSection === 1 ? (
+                <>
+                  {/* ② 정적 분석 */}
+                  <pre
+                    className="whitespace-pre-wrap"
+                    style={{ fontWeight: 350, lineHeight: '1.6' }}
+                  >
+                    {allTexts[1]}
+                  </pre>
+                  <button
+                    onClick={() => setShowPeDetails((v) => !v)}
+                    className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+                  >
+                    {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
+                  </button>
+                  {showPeDetails && (
+                    <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
+                      <div>
+                        <strong>Import DLL:</strong>{' '}
+                        {Array.isArray(data.pe_headers.imports)
+                          ? data.pe_headers.imports.map((s) => s.dll).join(', ')
+                          : 'N/A'}
+                      </div>
+                      <div>
+                        <strong>섹션 개수:</strong>{' '}
+                        {data.pe_headers.number_of_sections ?? 'N/A'}
+                      </div>
+                      <div>
+                        <strong>섹션 정보:</strong>{' '}
+                        {Array.isArray(data.pe_headers.sections)
+                          ? data.pe_headers.sections
+                              .map((s) => s.name)
+                              .join(', ')
+                          : 'N/A'}
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setShowYaraRule((v) => !v)}
+                    className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+                  >
+                    {showYaraRule ? 'YARA 룰 숨기기' : 'YARA 룰 보기'}
+                  </button>
+                  {showYaraRule && (
+                    <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
+                      <pre className="whitespace-pre-wrap font-mono text-sm">
+                        {data.yara_rule}
+                      </pre>
+                    </div>
+                  )}
+                </>
+              ) : currentSection === 2 ? (
+                /* ③ 동적 분석 */
                 <pre
                   className="whitespace-pre-wrap"
                   style={{ fontWeight: 350, lineHeight: '1.6' }}
                 >
-                  {allTexts[0].split('<VirusTotal')[0].trim()}
+                  {allTexts[2]}
                 </pre>
-              </>
-            ) : currentSection === 1 ? (
-              <>
-                {/* ② 정적 분석 */}
+              ) : currentSection === 4 ? (
+                /* ⑤ MITRE ATT&CK */
                 <pre
                   className="whitespace-pre-wrap"
                   style={{ fontWeight: 350, lineHeight: '1.6' }}
                 >
-                  {allTexts[1]}
+                  {allTexts[4]}
                 </pre>
-                <button
-                  onClick={() => setShowPeDetails((v) => !v)}
-                  className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+              ) : (
+                /* ⑥ CWE */
+                <pre
+                  className="whitespace-pre-wrap"
+                  style={{ fontWeight: 350, lineHeight: '1.6' }}
                 >
-                  {showPeDetails ? 'PE 세부정보 숨기기' : 'PE 세부정보 보기'}
-                </button>
-                {showPeDetails && (
-                  <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
-                    <div>
-                      <strong>Import DLL:</strong>{' '}
-                      {Array.isArray(data.pe_headers.imports)
-                        ? data.pe_headers.imports.map((s) => s.dll).join(', ')
-                        : 'N/A'}
-                    </div>
-                    <div>
-                      <strong>섹션 개수:</strong>{' '}
-                      {data.pe_headers.number_of_sections ?? 'N/A'}
-                    </div>
-                    <div>
-                      <strong>섹션 정보:</strong>{' '}
-                      {Array.isArray(data.pe_headers.sections)
-                        ? data.pe_headers.sections.map((s) => s.name).join(', ')
-                        : 'N/A'}
-                    </div>
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowYaraRule((v) => !v)}
-                  className="mt-4 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
-                >
-                  {showYaraRule ? 'YARA 룰 숨기기' : 'YARA 룰 보기'}
-                </button>
-                {showYaraRule && (
-                  <div className="mt-2 mb-6 p-4 bg-gray-50 border rounded space-y-2 text-sm">
-                    <pre className="whitespace-pre-wrap font-mono text-sm">
-                      {data.yara_rule}
-                    </pre>
-                  </div>
-                )}
-              </>
-            ) : currentSection === 2 ? (
-              /* ③ 동적 분석 */
-              <pre
-                className="whitespace-pre-wrap"
-                style={{ fontWeight: 350, lineHeight: '1.6' }}
-              >
-                {allTexts[2]}
-              </pre>
-            ) : currentSection === 4 ? (
-              /* ⑤ MITRE ATT&CK */
-              <pre
-                className="whitespace-pre-wrap"
-                style={{ fontWeight: 350, lineHeight: '1.6' }}
-              >
-                {allTexts[4]}
-              </pre>
-            ) : (
-              /* ⑥ CWE */
-              <pre
-                className="whitespace-pre-wrap"
-                style={{ fontWeight: 350, lineHeight: '1.6' }}
-              >
-                {allTexts[5]}
-              </pre>
-            )}
+                  {allTexts[5]}
+                </pre>
+              )}
+            </div>
           </main>
         </div>
       </div>

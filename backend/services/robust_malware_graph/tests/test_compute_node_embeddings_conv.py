@@ -1,6 +1,12 @@
 import types
 import importlib
 import sys
+import pytest
+
+pytest.importorskip("torch")
+pytest.importorskip("torch_geometric")
+pytest.importorskip("yaml")
+
 import torch
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import GraphConv, HeteroConv
