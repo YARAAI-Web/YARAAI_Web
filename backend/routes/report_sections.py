@@ -14,7 +14,7 @@ from services.dynamic.gpt_summary import generate_full_summary_with_split
 
 router = APIRouter()
 
-AFTER_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
+AFTER_DIR = r"C:\Users\User\Desktop\yaraai\after"
 
 @router.get("/api/report/{uuid}/{section}")
 def get_report_section(uuid: str, section: str):

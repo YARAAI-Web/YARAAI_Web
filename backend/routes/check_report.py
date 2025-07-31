@@ -3,7 +3,7 @@ from fastapi import APIRouter
 import os
 
 router = APIRouter()
-AFTER_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
+AFTER_DIR = r"C:\Users\User\Desktop\yaraai\after"
 
 @router.get("/api/check-report/{uuid}")
 async def check_report(uuid: str):

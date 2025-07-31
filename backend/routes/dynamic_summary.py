@@ -10,7 +10,7 @@ from services.utils.patch_report import prepare_report_json_for_prompt  # JSON �
 router = APIRouter()
 
 # 분석 결과 저장된 디렉터리 경로
-DYNAMIC_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
+DYNAMIC_DIR = r"C:\Users\User\Desktop\yaraai\after"
 
 @router.get("/api/dynamic-summary/{filename}")
 async def get_dynamic_summary(filename: str):

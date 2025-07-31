@@ -17,6 +17,7 @@ from .CWE.map_CWE import analyze_code_with_cwe
 # Virustotal 연동
 from services.virustotal.vt_service import get_vt_data
 from .robust_malware_graph.test import malware_sniper
+from services.tag.special_tag import tags_by_sha256
 
 # IDA 및 MCP 설정
 IDA_PATH   = r"C:\Program Files\IDA Professional 9.1\ida.exe"
@@ -114,7 +115,11 @@ def analyze_file(file_path: str) -> Dict[str, Any]:
 
     # CWE 분석
     CWE = analyze_code_with_cwe(ch_data)
-
+    custom_tags = tags_by_sha256(sha256)
+    if custom_tags:
+        print(f"⚠️ Custom MITRE/CWE 태깅 적용: {sha256}")
+        mitre_mapping = custom_tags.get("MITRE", mitre_mapping)
+        CWE = custom_tags.get("CWE", CWE)
     # 5) Virustotal API 호출
     try:
         vt_data = get_vt_data(sha256)

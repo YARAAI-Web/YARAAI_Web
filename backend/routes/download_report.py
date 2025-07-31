@@ -4,7 +4,7 @@ import os
 
 router = APIRouter()
 
-AFTER_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
+AFTER_DIR = r"C:\Users\User\Desktop\yaraai\after"
 
 @router.get("/download-json/{uuid}")
 def download_dynamic_json(uuid: str):

@@ -5,7 +5,7 @@ import time
 from services.dynamic.submit_and_monitor import analyze_dynamically
 from services.utils.cleanup import cleanup_file  # ✅ 추가
 
-WATCH_DIR = r"C:\Users\hyunj\analysis_yaraai\before"
+WATCH_DIR = r"C:\Users\User\Desktop\yaraai\before"
 PROCESSED = set()
 
 def watch_before_folder():

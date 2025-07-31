@@ -4,7 +4,7 @@ import os
 import shutil
 
 def cleanup_file(file_path):
-    done_dir = r"C:\Users\hyunj\analysis_yaraai\done"
+    done_dir = r"C:\Users\User\Desktop\yaraai\done"
     os.makedirs(done_dir, exist_ok=True)
 
     filename = os.path.basename(file_path)

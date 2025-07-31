@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from openai import OpenAI
+from fastapi import status
 
 from services.analysis import analyze_file
 from generate_callgraph import generate_call_graph
@@ -38,8 +39,8 @@ UNPACK_DIR    = os.path.join(BASE_DIR, "services", "unpacked")
 META_DIR      = os.path.join(BASE_DIR, "meta_json")
 STATIC_DIR    = os.path.join(BASE_DIR, "static", "callgraphs")
 CAPA_JSON_DIR = os.path.join(BASE_DIR, "services", "CAPA", "capa_json")
-BEFORE_DIR    = r"C:\Users\hyunj\analysis_yaraai\before"
-AFTER_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
+BEFORE_DIR    = r"C:\Users\User\Desktop\yaraai\before"
+AFTER_DIR = r"C:\Users\User\Desktop\yaraai\after"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(META_DIR, exist_ok=True)
@@ -355,3 +356,15 @@ def download_report(uuid: str):
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
     return FileResponse(path, filename=f"{uuid}_dynamic.json")
+
+@app.get("/api/check-report/{uuid}")
+def check_dynamic_report(uuid: str):
+    """
+    클라이언트에서 동적 분석 리포트의 생성 여부를 폴링(polling)할 때 사용하는 엔드포인트입니다.
+    AFTER_DIR 경로 밑에 {uuid}_dynamic.json 파일이 존재하면 exists=true, 아니면 false를 반환합니다.
+    """
+    report_path = os.path.join(AFTER_DIR, f"{uuid}_dynamic.json")
+    return JSONResponse(
+        content={ "exists": os.path.isfile(report_path) },
+        status_code=status.HTTP_200_OK
+    )

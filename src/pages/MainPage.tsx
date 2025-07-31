@@ -46,7 +46,7 @@ export default function MainPage() {
         { headers: { 'Content-Type': 'multipart/form-data' } }
       )
 
-      const filename = res.data.filename               // 예: abc123.exe
+      const filename = res.data.filename // 예: abc123.exe
       const baseName = filename.replace(/\.[^.]+$/, '') // abc123
 
       // 💡 기존 캐시 제거 (섞이는 문제 방지)
@@ -57,7 +57,7 @@ export default function MainPage() {
       await waitForDynamicReport(baseName)
 
       // ✅ 그제서야 페이지 이동
-      navigate(`/analysis/${filename}`)
+      navigate(`/analysis/${baseName}`)
     } catch (err: any) {
       console.error(err)
       alert(err.response?.data?.detail || '파일 업로드 중 오류가 발생했습니다.')
@@ -107,13 +107,13 @@ export default function MainPage() {
           onClick={handleAnalysis}
           disabled={!file || loading}
           className={`
-            w-[300px] h-[50px] rounded-full text-[16px] font-extrabold border transition-colors duration-200
-            ${
-              file && !loading
-                ? 'bg-[#1b65fe] border-[#1b65fe] text-[#FFFFFF] hover:bg-[#1550cc]'
-                : 'bg-gray-200 border-gray-300 text-gray-500'
-            }
-          `}
+              w-[300px] h-[50px] rounded-full text-[16px] font-extrabold border transition-colors duration-200
+              ${
+                file && !loading
+                  ? 'bg-[#1b65fe] border-[#1b65fe] text-[#FFFFFF] hover:bg-[#1550cc]'
+                  : 'bg-gray-200 border-gray-300 text-gray-500'
+              }
+            `}
           style={{ marginTop: '50px' }}
         >
           {loading ? 'Analyzing...' : 'Analysis'}

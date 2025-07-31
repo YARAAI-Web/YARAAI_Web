@@ -1,19 +1,17 @@
 // vite.config.ts
-
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/reports': {
+      '/api': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
       },
-      '/api': {
+      '/reports': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
@@ -23,19 +21,17 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      // Suricata 룰 JSON 다운로드용 proxy
       '/meta_json': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
-        // 경로 재작성 없이 그대로 전달
-        rewrite: (path) => path,
+        rewrite: (p) => p,
       },
     },
     watch: {
       ignored: [
-        // ignore all files under backend/services/CAPA/capa_json
-        path.resolve(__dirname, 'backend/services/CAPA/capa_json/**'),
+        // 이 한 줄이면 backend 아래 어떤 변경도 전부 무시합니다:
+        '**/backend/**',
       ],
     },
   },

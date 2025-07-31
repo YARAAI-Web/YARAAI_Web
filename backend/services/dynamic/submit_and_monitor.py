@@ -8,14 +8,14 @@ import subprocess
 import psutil  # ⚠️ VM1에 설치되어 있어야 함 (pip install psutil)
 
 # 설정
-VM1_IP = "192.168.56.108"
-VM1_USER = "cuckoo"
+VM1_IP = "192.168.88.130"
+VM1_USER = "babo"
 VM1_PASS = "cuckoo"
-REMOTE_INPUT_DIR = "/home/cuckoo/files_input/"
+REMOTE_INPUT_DIR = "/home/babo/files_input/"
 CUCKOO_API = f"http://{VM1_IP}:8090"
 
-LOCAL_RESULT_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
-AFTER_DIR = r"C:\Users\hyunj\analysis_yaraai\after"
+LOCAL_RESULT_DIR = r"C:\Users\User\Desktop\yaraai\after"
+AFTER_DIR = r"C:\Users\User\Desktop\yaraai\after"
 
 def analyze_dynamically(filepath):
     print(f"[🚀] 동적 분석 시작: {filepath}")
@@ -55,7 +55,7 @@ def analyze_dynamically(filepath):
 
 def wait_for_report(ssh, task_id, file_uuid, timeout=600):
     print(f"[⏳] 분석 대기 중 (task #{task_id})")
-    remote_report = f"/home/cuckoo/.cuckoo/storage/analyses/{task_id}/reports/report.json"
+    remote_report = f"/home/babo/.cuckoo/storage/analyses/{task_id}/reports/report.json"
     local_json_path = os.path.join(LOCAL_RESULT_DIR, f"{file_uuid}_dynamic.json")
 
     sftp = ssh.open_sftp()
@@ -85,7 +85,7 @@ def wait_for_report(ssh, task_id, file_uuid, timeout=600):
     sftp.close()
 
 def download_screenshots(sftp, task_id, file_uuid):
-    remote_shots_dir = f"/home/cuckoo/.cuckoo/storage/analyses/{task_id}/shots/"
+    remote_shots_dir = f"/home/babo/.cuckoo/storage/analyses/{task_id}/shots/"
     local_shots_dir = os.path.join(LOCAL_RESULT_DIR, f"{file_uuid}_shots")
     os.makedirs(local_shots_dir, exist_ok=True)
 

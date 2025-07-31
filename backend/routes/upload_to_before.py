@@ -6,7 +6,7 @@ import uuid
 
 router = APIRouter()
 
-UPLOAD_DIR = r"C:\Users\hyunj\analysis_yaraai\before"
+UPLOAD_DIR = r"C:\Users\User\Desktop\yaraai\before"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload")
