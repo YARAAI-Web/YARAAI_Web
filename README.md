@@ -42,7 +42,7 @@
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 YARAAI_Web/
@@ -60,23 +60,25 @@ YARAAI_Web/
 
 
 ---
-
+```
 ##  Installation & Setup
 
 ### 1. Clone Repository
-```
-git clone https://github.com/YARAAI-Web/YARAAI_Web.git
-cd YARAAI_Web
-2. Backend Setup
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-3. Frontend Setup
-cd frontend
-npm install
-npm run dev
-Usage
+- git clone https://github.com/YARAAI-Web/YARAAI_Web.git
+- cd YARAAI_Web
+  
+### 2. Backend Setup
+- cd backend
+- python -m venv venv
+- source venv/bin/activate  # Windows: venv\Scripts\activate
+- pip install -r requirements.txt
+
+### 3. Frontend Setup
+- cd frontend
+- npm install
+- npm run dev
+  
+### Usage
 Start Backend
 uvicorn main:app --reload --port 8000
 Start Frontend
@@ -117,6 +119,6 @@ rule AutoGen_1234abcd
 License
 This project is licensed under the MIT License.
 
+```
 Author: YARAAI_Web Development Team
-
 Email: malyaraai72@gmail.com 
