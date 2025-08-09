@@ -1,56 +1,116 @@
-# React + TypeScript + Vite
+# YARAAI_Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Automated Malware Analysis and YARA Rule Generation Platform**  
+> YARAAI_Web is a web-based malware analysis platform that integrates static/dynamic analysis results to automatically generate YARA rules, visualize findings, and support threat hunting workflows.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+##  Features
 
-## Expanding the ESLint configuration
+- **File Upload & Analysis**
+  - Upload PE files (`.exe`, `.dll`) via a web interface
+  - Automatic static and dynamic analysis pipeline
+- **YARA Rule Generation**
+  - Extracts key artifacts from analysis results
+  - Automatically generates YARA rules from JSON output
+- **Suricata Rule Conversion**
+  - Converts generated YARA rules into Suricata signatures for network detection
+- **Interactive Visualization**
+  - Function Call Graph visualization (PyVis)
+  - CAPA rule hits, MITRE ATT&CK mapping, CWE mapping
+- **Report Generation**
+  - HTML-based interactive reports
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+##  Tech Stack
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Backend
+- **FastAPI** – REST API server for file analysis & rule generation
+- **Python 3.10+** – Main language for data processing & automation
+- **CAPA** – Capability-based malware analysis
+- **Suricata** – Network IDS integration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Frontend
+- **React + TypeScript** – User interface
+- **Vite** – Build tool for fast development
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
-"# YARRAI_Web" 
-"# YARRAI_Web" 
+### Analysis Tools
+- **Cuckoo Sandbox** – Dynamic malware analysis
+- **YARA** – Signature-based detection
+- **VirusTotal API** – Threat intelligence enrichment
+
+---
+
+##  Project Structure
+
+YARAAI_Web/
+├── backend/ # API 서버 (FastAPI)
+├── public/ # 정적 리소스
+├── src/ # React 소스 코드
+│ ├── components/ # UI 컴포넌트
+│ ├── pages/ # 페이지 단위
+│ ├── hooks/ # 커스텀 훅
+│ ├── services/ # API 연동 로직
+│ └── utils/ # 공용 유틸
+├── tailwind.config.js # Tailwind 설정
+├── vite.config.ts # Vite 빌드 설정
+└── package.json
+
+---
+
+##  Installation & Setup
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/YARAAI-Web/YARAAI_Web.git
+cd YARAAI_Web
+2. Backend Setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+3. Frontend Setup
+cd frontend
+npm install
+npm run dev
+Usage
+Start Backend
+uvicorn main:app --reload --port 8000
+Start Frontend
+npm run dev
+Access Web UI
+Open http://localhost:5173 in your browser.
+
+Workflow
+Upload File – User uploads .exe/.dll
+
+Static Analysis – Extract sections, imports, strings
+
+Dynamic Analysis – Execute in Cuckoo Sandbox & capture behaviors
+
+YARA Rule Generation – Extract IoCs & create detection rules
+
+Visualization – Call graph, MITRE ATT&CK mapping, CWE mapping
+
+Report – Generate HTML report and optionally export Suricata rules
+
+Example Generated YARA Rule
+rule AutoGen_1234abcd
+{
+    meta:
+        description = "Auto-generated rule from sample analysis"
+        author = "YARAAI_Web"
+    strings:
+        $s1 = "VirtualAllocEx"
+        $s2 = "CreateRemoteThread"
+    condition:
+        all of them
+}
+
+License
+This project is licensed under the MIT License.
+
+Author: YARAAI_Web Development Team
+
+Email: security@yaraai.com
