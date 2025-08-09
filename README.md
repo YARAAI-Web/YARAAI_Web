@@ -59,7 +59,6 @@ YARAAI_Web/
 └── package.json
 
 
----
 ```
 ##  Installation & Setup
 
