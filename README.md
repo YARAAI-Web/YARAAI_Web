@@ -58,7 +58,6 @@ YARAAI_Web/
 ├── vite.config.ts      # Vite 빌드 설정
 └── package.json
 
-
 ```
 ##  Installation & Setup
 
@@ -113,7 +112,6 @@ rule AutoGen_1234abcd
     condition:
         all of them
 }
-
 ```
 License
 This project is licensed under the MIT License.
