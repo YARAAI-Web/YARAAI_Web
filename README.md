@@ -42,27 +42,29 @@
 
 ---
 
-##  Project Structure
+## 📂 Project Structure
 
+```
 YARAAI_Web/
-├── backend/ # API 서버 (FastAPI)
-├── public/ # 정적 리소스
-├── src/ # React 소스 코드
-│ ├── components/ # UI 컴포넌트
-│ ├── pages/ # 페이지 단위
-│ ├── hooks/ # 커스텀 훅
-│ ├── services/ # API 연동 로직
-│ └── utils/ # 공용 유틸
-├── tailwind.config.js # Tailwind 설정
-├── vite.config.ts # Vite 빌드 설정
+├── backend/            # API 서버 (FastAPI)
+├── public/             # 정적 리소스
+├── src/                # React 소스 코드
+│   ├── components/     # UI 컴포넌트
+│   ├── pages/          # 페이지 단위
+│   ├── hooks/          # 커스텀 훅
+│   ├── services/       # API 연동 로직
+│   └── utils/          # 공용 유틸
+├── tailwind.config.js  # Tailwind 설정
+├── vite.config.ts      # Vite 빌드 설정
 └── package.json
+
 
 ---
 
 ##  Installation & Setup
 
 ### 1. Clone Repository
-```bash
+```
 git clone https://github.com/YARAAI-Web/YARAAI_Web.git
 cd YARAAI_Web
 2. Backend Setup
@@ -82,7 +84,9 @@ npm run dev
 Access Web UI
 Open http://localhost:5173 in your browser.
 
-Workflow
+---
+
+### 2. Workflow
 Upload File – User uploads .exe/.dll
 
 Static Analysis – Extract sections, imports, strings
@@ -95,7 +99,8 @@ Visualization – Call graph, MITRE ATT&CK mapping, CWE mapping
 
 Report – Generate HTML report and optionally export Suricata rules
 
-Example Generated YARA Rule
+```
+## Example Generated YARA Rule
 rule AutoGen_1234abcd
 {
     meta:
@@ -108,9 +113,10 @@ rule AutoGen_1234abcd
         all of them
 }
 
+```
 License
 This project is licensed under the MIT License.
 
 Author: YARAAI_Web Development Team
 
-Email: security@yaraai.com
+Email: malyaraai72@gmail.com 
