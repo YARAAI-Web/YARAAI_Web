@@ -72,7 +72,6 @@ YARAAI_Web/
 - pip install -r requirements.txt
 
 ### 3. Frontend Setup
-- cd frontend
 - npm install
 - npm run dev
   
